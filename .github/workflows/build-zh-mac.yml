@@ -7,13 +7,14 @@ on:
 
 jobs:
   build-macos-arm64:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Show Xcode & Swift version
         run: |
+          xcrun --sdk macosx --show-sdk-version
           xcodebuild -version
           swift --version
 

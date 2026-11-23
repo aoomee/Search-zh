@@ -948,7 +948,7 @@ struct ContentView: View {
         }
     }
 
-    var body: some View {
+    private var windowWithOverlays: some View {
         window_
             // The column folded away, and out again at the edge (see Fold.swift).
             .overlay(alignment: sideOnRight ? .trailing : .leading) {
@@ -990,6 +990,10 @@ struct ContentView: View {
             .padding(.top, browser.revealInset)
             .ignoresSafeArea()
             .background(windowSetup)
+    }
+
+    private var windowObservingLayout: some View {
+        windowWithOverlays
             .onChange(of: browser.prefs.sidebar) { _, _ in
                 DispatchQueue.main.async { Lights.refresh(window); measureLights() }
             }
@@ -1014,6 +1018,10 @@ struct ContentView: View {
                 guard sideOnRight else { return }
                 DispatchQueue.main.async { Lights.refresh(window); measureLights() }
             }
+    }
+
+    var body: some View {
+        windowObservingLayout
             // Stepping away to another app: macOS draws its own resting
             // buttons, and on a light window they come out nearly white. Ours
             // go on in their place until the app comes back.
