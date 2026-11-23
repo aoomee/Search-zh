@@ -1,0 +1,31 @@
+name: Build Search 1.0.18 (Simplified Chinese - Apple Silicon)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build-macos-arm64:
+    runs-on: macos-15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show Xcode & Swift version
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Build Search.app (arm64)
+        run: |
+          chmod +x ./build.sh
+          SEARCH_ARCH=arm64 ./build.sh release app
+          ditto -c -k --sequesterRsrc --keepParent build/Search.app build/Search-1.0.18-zh-Hans-arm64.zip
+
+      - name: Upload Search.app ZIP Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Search-1.0.18-zh-Hans-arm64
+          path: build/Search-1.0.18-zh-Hans-arm64.zip
+          retention-days: 30
