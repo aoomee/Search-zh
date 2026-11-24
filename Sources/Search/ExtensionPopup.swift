@@ -84,12 +84,10 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSPopo
         web.load(URLRequest(url: url))
 
         let stage = NSView(frame: NSRect(origin: .zero, size: ExtensionPopup.lastSize[context.uniqueIdentifier] ?? NSSize(width: 360, height: 240)))
-        for view in [stage, web] {
-            view.wantsLayer = true
-            view.layer?.masksToBounds = true
-            view.layer?.cornerRadius = 16
-            view.layer?.cornerCurve = .continuous
-        }
+        stage.wantsLayer = true
+        stage.layer?.masksToBounds = true
+        stage.layer?.cornerRadius = 12
+        stage.layer?.cornerCurve = .continuous
         stage.addSubview(web)
         let host = NSViewController()
         host.view = stage
@@ -175,16 +173,24 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSPopo
 
     /// The page, at the popover's size, in view.
     private func reveal() {
-        guard !shown, let web, let popover, let stage = popover.contentViewController?.view else { return }
+        guard !shown, let web, let stage = popover?.contentViewController?.view else { return }
         shown = true
-        web.frame = NSRect(origin: .zero, size: popover.contentSize)
-        web.autoresizingMask = [.width, .height]
-        popover.animates = !Motion.instant
-        web.alphaValue = 1
+        // Keep the 25-point measurement viewport until the first size is known.
+        // From here on, all four edges follow the actual content bounds.
+        web.frame = NSRect(origin: .zero, size: stage.bounds.size)
+        web.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            web.topAnchor.constraint(equalTo: stage.topAnchor),
+            web.bottomAnchor.constraint(equalTo: stage.bottomAnchor),
+            web.leadingAnchor.constraint(equalTo: stage.leadingAnchor),
+            web.trailingAnchor.constraint(equalTo: stage.trailingAnchor)
+        ])
+        stage.layoutSubtreeIfNeeded()
+        stage.window?.alphaValue = 1
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = Motion.seconds(0.18)
+            context.duration = Motion.seconds(0.14)
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            stage.window?.animator().alphaValue = 1
+            web.animator().alphaValue = 1
         }
     }
 
@@ -321,20 +327,12 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSPopo
     }
 
     private func apply(_ size: NSSize) {
-        guard let popover else { return }
-        if abs(size.width - popover.contentSize.width) > 1 || abs(size.height - popover.contentSize.height) > 1 {
-            // The popover takes its size from its view controller, and goes
-            // back to it: both are told.
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = shown ? Motion.seconds(0.18) : 0
-                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                context.allowsImplicitAnimation = context.duration > 0
-                popover.contentViewController?.preferredContentSize = size
-                popover.contentSize = size
-            }
-            // After reveal, the web view follows the animated content bounds
-            // through its autoresizing mask. Keep its measuring frame until then.
-        }
+        guard let popover, let host = popover.contentViewController else { return }
+        host.preferredContentSize = size
+        popover.contentSize = size
+        host.view.setFrameSize(size)
+        web?.frame = NSRect(origin: .zero, size: size)
+        host.view.layoutSubtreeIfNeeded()
         if let id = extensionID { ExtensionPopup.lastSize[id] = size }
         reveal()
     }
