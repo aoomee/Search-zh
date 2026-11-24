@@ -306,13 +306,14 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
         }
 
         // Wait for 2 rAFs so WebKit commits a painted frame at the full size.
-        web.callAsyncJavaScript(
-            "await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); return true;",
-            arguments: [:],
-            in: nil,
-            contentWorld: .page
-        ) { _ in
-            Task { @MainActor in finishReveal() }
+        Task { @MainActor in
+            _ = try? await web.callAsyncJavaScript(
+                "await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); return true;",
+                arguments: [:],
+                in: nil,
+                contentWorld: .page
+            )
+            finishReveal()
         }
 
         // Safety cap so slow/suspended pages still appear promptly.
