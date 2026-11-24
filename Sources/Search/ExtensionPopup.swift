@@ -2,10 +2,12 @@ import AppKit
 import QuartzCore
 import WebKit
 
-// An extension's popup, hosted in a borderless floating NSPanel instead of
-// NSPopover so macOS 26's giant ~26pt Liquid Glass popover mask never slices
-// off the corners of extension UIs, and so opening never flashes a tiny circle
-// or jumps its top edge.
+// An extension's popup, hosted in a borderless floating NSPanel:
+// - Bypasses macOS 26's oversized NSPopover mask so extension UI corners are
+//   never sliced off.
+// - Waits for WebKit to finish painting at the final size (2x rAF) before
+//   fading/scaling in, eliminating the stale 25x25 black-square flash.
+// - Presents with macOS 26 native glass chrome + smooth top-anchored pop-in.
 
 @available(macOS 15.4, *)
 @MainActor
@@ -24,6 +26,7 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
     static let shared = ExtensionPopup()
 
     private var panel: PopupPanel?
+    private var chrome: NSView?
     private var stage: NSView?
     private var web: WKWebView?
     private var page: PopupPage?
@@ -36,8 +39,6 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
     private weak var button: NSView?
     private var closedByButton: (id: String, at: Date)?
 
-    /// Screen-space anchor rect used to keep the popup aligned below its button
-    /// as its size updates.
     private var anchorScreenRect: NSRect = .zero
     private var preferredEdge: NSRectEdge = .minY
 
@@ -54,10 +55,12 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
     private static var lastSize: [String: NSSize] = [:]
     private static let minStableWidth: CGFloat = 120
     private static let minStableHeight: CGFloat = 80
-    private static let cornerRadius: CGFloat = 14
+    private static let cornerRadius: CGFloat = 16
     private static let anchorGap: CGFloat = 6
     private static let screenMargin: CGFloat = 8
+
     private var shown = false
+    private var revealing = false
 
     func webView(_ webView: WKWebView, requestMediaCapturePermissionFor origin: WKSecurityOrigin,
                  initiatedByFrame frame: WKFrameInfo, type: WKMediaCaptureType,
@@ -78,7 +81,7 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
     }
 
     func show(_ url: URL, for context: WKWebExtensionContext, from anchor: NSView?, in browser: Browser? = nil) {
-        close()
+        close(immediate: true)
         guard let configuration = context.webViewConfiguration else { return }
 
         let targetBrowser = browser ?? anchor?.window.flatMap(Browsers.browser(for:))
@@ -89,7 +92,6 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
 
         let initialSize = ExtensionPopup.lastSize[context.uniqueIdentifier] ?? NSSize(width: 340, height: 260)
 
-        // Compute anchor rect in screen coordinates.
         if let anchor, let win = anchor.window {
             let inWindow = anchor.convert(anchor.bounds, to: nil)
             anchorScreenRect = win.convertToScreen(inWindow)
@@ -113,23 +115,50 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
         }
 
         // Start WebKit at 25x25 inside an invisible panel so Chrome-style
-        // min-content sizing works without flashing a tiny circle on screen.
+        // min-content sizing works without ever showing the 25x25 frame.
         let web = WKWebView(frame: NSRect(x: 0, y: 0, width: 25, height: 25), configuration: configuration)
         web.uiDelegate = self
         web.navigationDelegate = self
         web.load(URLRequest(url: url))
 
-        let stage = NSView(frame: NSRect(origin: .zero, size: initialSize))
+        // Outer macOS 26 glass / vibrancy chrome + clipped content stage.
+        let container = NSView(frame: NSRect(origin: .zero, size: initialSize))
+        container.wantsLayer = true
+        if let layer = container.layer {
+            layer.cornerRadius = ExtensionPopup.cornerRadius
+            layer.cornerCurve = .continuous
+            layer.masksToBounds = true
+            layer.borderWidth = 0.5
+            layer.borderColor = NSColor.labelColor.withAlphaComponent(0.14).cgColor
+        }
+
+        let backdrop: NSView
+        if #available(macOS 26.0, *) {
+            let glass = NSGlassEffectView(frame: container.bounds)
+            glass.autoresizingMask = [.width, .height]
+            glass.cornerRadius = ExtensionPopup.cornerRadius
+            backdrop = glass
+        } else {
+            let effect = NSVisualEffectView(frame: container.bounds)
+            effect.autoresizingMask = [.width, .height]
+            effect.material = .popover
+            effect.blendingMode = .behindWindow
+            effect.state = .active
+            backdrop = effect
+        }
+        container.addSubview(backdrop)
+
+        let stage = NSView(frame: container.bounds)
+        stage.autoresizingMask = [.width, .height]
         stage.wantsLayer = true
         if let layer = stage.layer {
             layer.cornerRadius = ExtensionPopup.cornerRadius
             layer.cornerCurve = .continuous
             layer.masksToBounds = true
             layer.backgroundColor = NSColor.white.cgColor
-            layer.borderWidth = 0.5
-            layer.borderColor = NSColor.black.withAlphaComponent(0.14).cgColor
         }
         stage.addSubview(web)
+        container.addSubview(stage)
 
         let frame = frameForSize(initialSize)
         let panel = PopupPanel(
@@ -145,12 +174,13 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
         panel.collectionBehavior = [.transient, .ignoresCycle, .fullScreenAuxiliary]
         panel.isMovable = false
         panel.hidesOnDeactivate = true
-        panel.contentView = stage
+        panel.contentView = container
         panel.delegate = self
-        // Keep completely invisible until real content size is measured.
+        // Completely invisible until WebKit finishes painting at the full size.
         panel.alphaValue = 0
 
         self.panel = panel
+        self.chrome = container
         self.stage = stage
         self.web = web
         self.parentWindow = hostWindow
@@ -162,21 +192,22 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
         Extensions.shared.controller.didOpenTab(page)
 
         shown = false
+        revealing = false
         placement = anchor.map(ExtensionPopup.describe) ?? ["from": "window"]
 
         hostWindow?.addChildWindow(panel, ordered: .above)
         panel.makeKeyAndOrderFront(nil)
         installDismissMonitors()
 
-        // Fallback reveal in case an extension is very small or slow to load.
+        // Fallback reveal in case an extension is genuinely tiny or slow.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self, weak panel] in
-            guard let self, let panel, panel === self.panel, !self.shown else { return }
+            guard let self, let panel, panel === self.panel, !self.shown, !self.revealing else { return }
             self.firstMeasure(forceReveal: true)
             self.follow()
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self, weak panel] in
-            guard let self, let panel, panel === self.panel, !self.shown else { return }
-            self.reveal()
+            guard let self, let panel, panel === self.panel, !self.shown, !self.revealing else { return }
+            self.prepareAndReveal()
         }
     }
 
@@ -203,17 +234,13 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
             x = anchorScreenRect.maxX + gap
             y = anchorScreenRect.midY - h / 2
         default:
-            // Hang cleanly below the toolbar button, right-aligned when near
-            // the right edge so it stays directly beneath the icon.
             x = anchorScreenRect.midX - w / 2
             y = anchorScreenRect.minY - gap - h
             if y < visible.minY + margin {
-                // Flip above if there's no room underneath.
                 y = anchorScreenRect.maxY + gap
             }
         }
 
-        // Clamp inside the screen's visible frame.
         x = min(max(x, visible.minX + margin), visible.maxX - margin - w)
         y = min(max(y, visible.minY + margin), visible.maxY - margin - h)
         return NSRect(x: x.rounded(), y: y.rounded(), width: w.rounded(.up), height: h.rounded(.up))
@@ -257,44 +284,116 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
                 "onWindow": content.convert(content.bounds, to: nil).intersects(r)]
     }
 
-    /// Reveals the panel smoothly once sized, with zero vertical offset.
-    private func reveal() {
-        guard !shown, let panel, let stage, let web else { return }
-        shown = true
+    /// Resizes WKWebView to the full stage while the panel is still invisible,
+    /// waits for 2 animation frames so WebKit's GPU process finishes painting
+    /// the full-size layout (preventing the 25x25 black-square flash), and then
+    /// runs a smooth macOS 26 pop-in animation.
+    private func prepareAndReveal() {
+        guard !shown, !revealing, let panel, let stage, let web else { return }
+        revealing = true
+
+        // Resize WebKit while panel.alphaValue is still 0.
         web.frame = stage.bounds
         web.autoresizingMask = [.width, .height]
+        stage.layoutSubtreeIfNeeded()
         panel.invalidateShadow()
+
+        let finishReveal: @MainActor () -> Void = { [weak self, weak panel] in
+            guard let self, let panel, panel === self.panel, !self.shown else { return }
+            self.shown = true
+            self.revealing = false
+            self.animateIn(panel)
+        }
+
+        // Wait for 2 rAFs so WebKit commits a painted frame at the full size.
+        web.callAsyncJavaScript(
+            "await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); return true;",
+            arguments: [:],
+            in: nil,
+            contentWorld: .page
+        ) { _ in
+            Task { @MainActor in finishReveal() }
+        }
+
+        // Safety cap so slow/suspended pages still appear promptly.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+            finishReveal()
+        }
+    }
+
+    private func animateIn(_ panel: PopupPanel) {
+        guard let layer = chrome?.layer else {
+            panel.alphaValue = 1
+            return
+        }
         if Motion.instant {
             panel.alphaValue = 1
-        } else {
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = Motion.seconds(0.14)
-                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                panel.animator().alphaValue = 1
-            }
+            return
+        }
+
+        // Subtle macOS 26 pop-in: scale 0.96 -> 1.0 + translateY -6pt -> 0 + fade 0 -> 1.
+        let bounds = layer.bounds
+        let cx = bounds.midX
+        let topY = bounds.maxY
+        let start = CATransform3DConcat(
+            CATransform3DMakeTranslation(-cx, -topY, 0),
+            CATransform3DConcat(
+                CATransform3DMakeScale(0.96, 0.96, 1),
+                CATransform3DMakeTranslation(cx, topY + 4, 0)
+            )
+        )
+        let timing = CAMediaTimingFunction(controlPoints: 0.22, 1.0, 0.36, 1.0)
+        let duration = Motion.seconds(0.18)
+
+        let anim = CABasicAnimation(keyPath: "transform")
+        anim.fromValue = NSValue(caTransform3D: start)
+        anim.toValue = NSValue(caTransform3D: CATransform3DIdentity)
+        anim.duration = duration
+        anim.timingFunction = timing
+        layer.add(anim, forKey: "popupReveal")
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = duration
+            context.timingFunction = timing
+            panel.animator().alphaValue = 1
         }
     }
 
     private func follow() {
         guard measuring == nil else { return }
-        if !shown { firstMeasure(forceReveal: false) }
+        if !shown && !revealing { firstMeasure(forceReveal: false) }
         ticks = 0
         measuring = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.grow() }
         }
     }
 
-    func close() {
+    func close(immediate: Bool = false) {
         measuring?.invalidate()
         measuring = nil
         removeDismissMonitors()
         let closing = panel
         let parent = parentWindow
+        let wasShown = shown
         forget()
-        if let closing {
+        guard let closing else { return }
+
+        if immediate || !wasShown || Motion.instant {
             parent?.removeChildWindow(closing)
             closing.orderOut(nil)
             closing.close()
+        } else {
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = Motion.seconds(0.11)
+                context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+                closing.animator().alphaValue = 0
+            }, completionHandler: {
+                Task { @MainActor in
+                    parent?.removeChildWindow(closing)
+                    closing.orderOut(nil)
+                    closing.close()
+                }
+            })
         }
     }
 
@@ -302,11 +401,14 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
         if let page { Extensions.shared.controller.didCloseTab(page, windowIsClosing: false) }
         page = nil
         panel = nil
+        chrome = nil
         stage = nil
         web = nil
         parentWindow = nil
         extensionID = nil
         button = nil
+        shown = false
+        revealing = false
     }
 
     func closes(_ id: String) -> Bool {
@@ -372,19 +474,17 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
     }
 
     private func firstMeasure(forceReveal: Bool) {
-        guard let web, !shown else { return }
+        guard let web, !shown, !revealing else { return }
         web.evaluateJavaScript("(\(ExtensionPopup.preferred))()") { [weak self] value, _ in
             MainActor.assumeIsolated {
-                guard let self, web === self.web, !self.shown else { return }
+                guard let self, web === self.web, !self.shown, !self.revealing else { return }
                 guard let pair = value as? [Double], pair.count == 2 else {
-                    if forceReveal { self.reveal() }
+                    if forceReveal { self.prepareAndReveal() }
                     return
                 }
                 let measured = NSSize(width: pair[0], height: pair[1])
                 let isStable = measured.width >= ExtensionPopup.minStableWidth && measured.height >= ExtensionPopup.minStableHeight
                 if !isStable && !forceReveal {
-                    // Extension is still waiting on its background worker; keep
-                    // hidden and let follow() catch the real layout shortly.
                     self.follow()
                     return
                 }
@@ -394,7 +494,7 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
     }
 
     private func apply(_ size: NSSize, allowReveal: Bool = true) {
-        guard let panel, let stage else { return }
+        guard let panel, let chrome, let stage else { return }
         let isStable = size.width >= ExtensionPopup.minStableWidth && size.height >= ExtensionPopup.minStableHeight
         if !shown && !isStable && !allowReveal { return }
 
@@ -406,8 +506,9 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
         if abs(nextFrame.width - panel.frame.width) > 1 || abs(nextFrame.height - panel.frame.height) > 1 ||
            abs(nextFrame.origin.x - panel.frame.origin.x) > 1 || abs(nextFrame.origin.y - panel.frame.origin.y) > 1 {
             panel.setFrame(nextFrame, display: true, animate: false)
-            stage.frame = NSRect(origin: .zero, size: nextFrame.size)
-            if shown {
+            chrome.frame = NSRect(origin: .zero, size: nextFrame.size)
+            stage.frame = chrome.bounds
+            if shown || revealing {
                 web?.frame = stage.bounds
             }
             panel.invalidateShadow()
@@ -415,7 +516,9 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
         if isStable, let id = extensionID {
             ExtensionPopup.lastSize[id] = target
         }
-        if allowReveal { reveal() }
+        if allowReveal && !shown && !revealing {
+            prepareAndReveal()
+        }
     }
 
     static let reach = """
@@ -438,7 +541,7 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
         guard let web, let panel else { return }
         ticks += 1
         if !shown {
-            firstMeasure(forceReveal: ticks >= 3)
+            if !revealing { firstMeasure(forceReveal: ticks >= 3) }
             return
         }
         if ticks <= 8 {
@@ -506,7 +609,7 @@ final class PopupPage: NSObject, WKWebExtensionTab {
         (browser ?? Extensions.shared.browser).map(Extensions.shared.window(of:))
     }
     func indexInWindow(for context: WKWebExtensionContext) -> Int { NSNotFound }
-    func webView(for context: WKWebView) -> WKWebView? { web }
+    func webView(for context: WKWebExtensionContext) -> WKWebView? { web }
     func title(for context: WKWebExtensionContext) -> String? { web?.title }
     func url(for context: WKWebExtensionContext) -> URL? { web?.url }
     func isLoadingComplete(for context: WKWebExtensionContext) -> Bool { !(web?.isLoading ?? false) }
