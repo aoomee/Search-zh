@@ -291,8 +291,8 @@ struct AssistantPanel: View {
                 .padding(.bottom, 10)
         }
         .frame(width: 380, alignment: .leading)
-        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
+        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
         .shadow(color: .black.opacity(0.14), radius: 24, y: 8)
         .onAppear { if !assistant.summary, !drawn { typing = true } }
     }
@@ -323,7 +323,7 @@ struct AssistantPanel: View {
         }
         .foregroundStyle(Palette.muted)
         .padding(8)
-        .background(Palette.wash, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .background(Palette.wash, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     private var scrolling: some View {
@@ -355,7 +355,7 @@ struct AssistantPanel: View {
             }
         }
         .padding(12)
-        .background(Palette.wash.opacity(0.6), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(Palette.wash.opacity(0.6), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     private struct TurnView: View {
@@ -394,7 +394,7 @@ struct AssistantPanel: View {
                     }
                     .foregroundStyle(Palette.muted)
                     .padding(8)
-                    .background(Palette.wash, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .background(Palette.wash, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
             }
         }
@@ -520,7 +520,7 @@ struct AISettings: View {
                         .frame(width: 130)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 5)
-                        .background(Palette.wash, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                        .background(Palette.wash, in: Capsule(style: .continuous))
                         .onSubmit { save(provider) }
                     Pill("Save") { save(provider) }
                     if provider == .openRouter {
@@ -546,7 +546,7 @@ struct AISettings: View {
                 .frame(width: 170)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 5)
-                .background(Palette.wash, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                .background(Palette.wash, in: Capsule(style: .continuous))
             }
         }
     }
@@ -565,8 +565,8 @@ struct AISettings: View {
             .frame(width: width, alignment: .leading)
             .padding(.horizontal, 8)
             .padding(.vertical, 5)
-            .background(menu ? Palette.ground : Palette.wash, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(menu ? Palette.hairline : .clear, lineWidth: 1))
+            .background(menu ? Palette.ground : Palette.wash, in: Capsule(style: .continuous))
+            .overlay(Capsule(style: .continuous).strokeBorder(menu ? Palette.hairline : .clear, lineWidth: 1))
         }
     }
 

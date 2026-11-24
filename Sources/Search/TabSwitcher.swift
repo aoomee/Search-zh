@@ -468,7 +468,7 @@ struct TabSwitcherOverlay: View {
         ZStack(alignment: .topLeading) {
             if let selected = switcher.selectedID,
                let index = switcher.candidates.firstIndex(of: selected) {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Palette.faint)
                     .frame(width: width, height: cardHeight)
                     .offset(
@@ -492,8 +492,8 @@ struct TabSwitcherOverlay: View {
             }
         }
         .padding(12)
-        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Palette.hairline))
+        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Palette.hairline))
         .background(GeometryReader { box in
             Color.clear.preference(key: PanelFrame.self, value: box.frame(in: .global))
         })
@@ -538,8 +538,8 @@ struct TabSwitcherOverlay: View {
             }
         }
         .padding(8)
-        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Palette.hairline))
+        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Palette.hairline))
         .background(GeometryReader { box in
             Color.clear.preference(key: MoonsFrame.self, value: box.frame(in: .global))
         })
@@ -611,7 +611,7 @@ struct TabSwitcherOverlay: View {
                     }
                 }
                 .frame(width: width - 16, height: previewHeight)
-                .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
 
                 HStack(spacing: 6) {
                     if prefs.glyph == .icons, !tab.isBlank {
@@ -623,11 +623,13 @@ struct TabSwitcherOverlay: View {
                         .lineLimit(1)
                     if tab.muted || partner?.muted == true { mutedMark }
                 }
+                .padding(.horizontal, 6)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .background(tab.id == switcher.selectedID ? Palette.hover : .clear, in: Capsule(style: .continuous))
             }
             .padding(8)
             .frame(width: width, height: height, alignment: .topLeading)
-            .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
         .background(GeometryReader { box in
@@ -649,8 +651,8 @@ struct TabSwitcherOverlay: View {
                     picture(tab, width: width - 12, height: previewHeight - 5, mark: 18)
                 }
                 .frame(width: width - 12, height: previewHeight)
-                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous).strokeBorder(Palette.hairline))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Palette.hairline))
 
                 HStack(spacing: 4) {
                     Text(tab.label)
@@ -659,13 +661,15 @@ struct TabSwitcherOverlay: View {
                         .lineLimit(1)
                     if tab.muted { mutedMark }
                 }
+                .padding(.horizontal, 6)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .background(selected ? Palette.hover : .clear, in: Capsule(style: .continuous))
             }
             .padding(6)
             .frame(width: width, alignment: .topLeading)
-            .background(selected ? Palette.faint : .clear, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .background(selected ? Palette.faint : .clear, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .animation(Motion.glide, value: selected)
-            .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
         .background(GeometryReader { box in

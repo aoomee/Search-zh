@@ -62,6 +62,7 @@ struct SplitTabItem: View {
                     }
                     .allowsHitTesting(false)
                 }
+                .modifier(SplitOutline(shape: RoundedRectangle(cornerRadius: 14, style: .continuous), colour: greys.tile))
             } else {
                 HStack(spacing: 0) {
                     ForEach(pages.indices, id: \.self) { index in
@@ -69,32 +70,21 @@ struct SplitTabItem: View {
                             Rectangle()
                                 .fill(Palette.hairline)
                                 .frame(width: 1)
-                                .padding(.vertical, inset + 6)
+                                .padding(.vertical, 6)
                         }
                         half(at: index)
                     }
                 }
-                .frame(width: width, height: height)
+                .frame(width: width, height: SplitTabHalf.pillHeight)
                 .overlay(alignment: .trailing) { cross }
+                .modifier(SplitOutline(shape: Capsule(style: .continuous), colour: greys.tile))
                 // The pointer over the cross is over the cross, not over
                 // either half, so a half losing it can't take the cross away
                 // under it: only leaving the whole item clears the half.
                 .onHover { if !$0 { hovered = nil } }
+                .padding(.vertical, inset)
             }
         }
-        .background {
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
-                .fill(greys.tile)
-                .padding(.vertical, inset)
-                .allowsHitTesting(false)
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
-                .strokeBorder(Palette.hairline, lineWidth: 1)
-                .padding(.vertical, inset)
-                .allowsHitTesting(false)
-        }
-        .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
         .accessibilityElement(children: .contain)
         .accessibilityLabel("分屏标签页")
         .animation(Motion.quick, value: hovered)
@@ -156,6 +146,19 @@ struct SplitTabItem: View {
                 .help(tab.id == pages.first?.id ? "关闭左侧页面"
                       : tab.id == pages.last?.id ? "关闭右侧页面" : "关闭此页面")
         }
+    }
+}
+
+private struct SplitOutline<Outline: InsettableShape>: ViewModifier {
+    let shape: Outline
+    let colour: Color
+
+    func body(content: Content) -> some View {
+        content
+            .background(colour, in: shape)
+            .clipShape(shape)
+            .overlay(shape.strokeBorder(Palette.hairline, lineWidth: 1).allowsHitTesting(false))
+            .contentShape(shape)
     }
 }
 
@@ -221,8 +224,7 @@ private struct SplitTabHalf: View {
             .frame(height: stacked ? height : Self.pillHeight)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background { ground.animation(Motion.quick, value: stacked && focused).animation(Motion.quick, value: joined) }
-            .frame(height: height)
-            .contentShape(Rectangle())
+            .contentShape(shape)
     }
 
     private var handled: some View {
@@ -239,7 +241,7 @@ private struct SplitTabHalf: View {
             .modifier(OptionClick { if interactive && !editing { browser.optionClick(tab) } })
             .overlay {
                 if browser.selectedTabIDs.contains(tab.id) {
-                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    shape
                         .strokeBorder(Palette.ink.opacity(0.35), lineWidth: 1)
                         .allowsHitTesting(false)
                 }
@@ -277,7 +279,7 @@ private struct SplitTabHalf: View {
     /// The grey's shape: round, but square on the side it shares with the
     /// other half while that one is lit too.
     private var shape: UnevenRoundedRectangle {
-        let round: CGFloat = 9
+        let round: CGFloat = stacked ? 14 : Self.pillHeight / 2
         // Square where it meets a lit neighbour; round at the ends and
         // beside one that isn't.
         let before: CGFloat = !first && joinedBefore ? 0 : round

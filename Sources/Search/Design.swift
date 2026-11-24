@@ -170,7 +170,7 @@ enum Metrics {
     /// window's edges (and from the column, folded away), and its corners
     /// this round.
     static let cardGap: CGFloat = 8
-    static let cardRadius: CGFloat = 10
+    static let cardRadius: CGFloat = 18
     /// Where the first tab starts. The traffic lights run from 19 to 79 —
     /// measured, not guessed — so this leaves them the same air on their right
     /// that the window gives them on their left.

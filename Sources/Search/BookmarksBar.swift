@@ -157,11 +157,11 @@ struct BookmarksBar: View {
                         .foregroundStyle(Palette.faint)
                 }
             }
-            .padding(.horizontal, node.unnamed ? 0 : 8)
-            .frame(minWidth: node.unnamed ? 22 : nil)
+            .padding(.horizontal, node.unnamed ? 0 : 10)
+            .frame(width: node.unnamed ? 22 : nil)
             .frame(height: 22)
-            .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(hovering ? Palette.hover : .clear))
-            .contentShape(Rectangle())
+            .background(Capsule(style: .continuous).fill(hovering ? Palette.hover : .clear))
+            .contentShape(Capsule(style: .continuous))
             .onTapGesture(perform: act)
             .onHover { hovering = $0 }
             .help(node.url ?? node.title)

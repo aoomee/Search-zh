@@ -210,7 +210,7 @@ struct PeekPanel: View {
 
     /// Grown to the page it is about to become (Browser.peekFill), it wears
     /// the page's corners, so nothing changes when it becomes the tab.
-    private var corner: CGFloat { browser.peekFill ? (browser.asCards ? Metrics.cardRadius : 0) : 12 }
+    private var corner: CGFloat { browser.peekFill ? (browser.asCards ? Metrics.cardRadius : 0) : 20 }
 
     var body: some View {
         GeometryReader { geo in
@@ -364,7 +364,7 @@ struct PeekSkeleton: View {
                     bar(120, 8)
                 }
                 .padding(.bottom, 26)
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .frame(width: width, height: width * 0.36)
                     .padding(.bottom, 28)
                 ForEach(Array([1, 0.97, 0.93, 0.98, 0.62].enumerated()), id: \.offset) { _, part in

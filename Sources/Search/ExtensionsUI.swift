@@ -49,7 +49,7 @@ struct ExtensionsPage: View {
                             .font(.system(size: 12.5))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 7)
-                            .background(Palette.wash, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                            .background(Palette.wash, in: Capsule(style: .continuous))
                             if !extensions.busy.isEmpty {
                                 Ring(size: 12)
                             } else {
@@ -189,7 +189,7 @@ struct ExtensionsPage: View {
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(hovering ? Palette.ink : Palette.muted)
                             .frame(width: 26, height: 26)
-                            .contentShape(Rectangle())
+                            .contentShape(Capsule(style: .continuous))
                     }
                     .menuStyle(.borderlessButton)
                     .menuIndicator(.hidden)
@@ -294,8 +294,8 @@ private struct RunsOn: View {
             .foregroundStyle(access.restricted ? Palette.ink : Palette.muted)
             .padding(.horizontal, 8)
             .frame(height: 22)
-            .background(Palette.wash, in: Capsule())
-            .contentShape(Capsule())
+            .background(Palette.wash, in: Capsule(style: .continuous))
+            .contentShape(Capsule(style: .continuous))
         }
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)
@@ -332,7 +332,7 @@ private struct SiteList: View {
                                 .font(.system(size: 9, weight: .semibold))
                                 .foregroundStyle(Palette.muted)
                                 .frame(width: 18, height: 18)
-                                .contentShape(Rectangle())
+                                .contentShape(Capsule(style: .continuous))
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("移除 \(host)")
@@ -354,7 +354,7 @@ private struct SiteList: View {
                     .font(.system(size: 12))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 5)
-                    .background(Palette.wash, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .background(Palette.wash, in: Capsule(style: .continuous))
                     Pill("Add", action: add)
                         .disabled(SiteAccess.host(from: typed) == nil)
                 }
@@ -420,14 +420,14 @@ struct StoreOffer: View {
                             .foregroundStyle(Palette.ground)
                             .padding(.horizontal, 11)
                             .padding(.vertical, 5)
-                            .background(Palette.ink, in: Capsule())
+                            .background(Palette.ink, in: Capsule(style: .continuous))
                     }
                 }
                 .padding(.leading, 16)
                 .padding(.trailing, 10)
                 .padding(.vertical, 9)
-                .background(Palette.ground, in: Capsule())
-                .overlay(Capsule().strokeBorder(Palette.hairline, lineWidth: 1))
+                .background(Palette.ground, in: Capsule(style: .continuous))
+                .overlay(Capsule(style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
                 .shadow(color: .black.opacity(0.12), radius: 20, y: 6)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }

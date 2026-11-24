@@ -134,12 +134,12 @@ struct Omnibox: View {
                     // an app.
                     Breath()
 
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
                         .fill(Palette.ground)
                 }
             }
             .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .strokeBorder(
                         refused ? Color.red.opacity(0.35) : Palette.hairline,
                         lineWidth: 1
@@ -173,12 +173,12 @@ struct Omnibox: View {
         VStack(spacing: 0) {
             if let site = browser.siteOffer {
                 SiteOfferRow(site: site)
-                    .contentShape(Rectangle())
+                    .contentShape(Capsule(style: .continuous))
                     .onTapGesture { _ = browser.lockSiteOffer() }
             }
             ForEach(Array(browser.offers.enumerated()), id: \.element.id) { index, offer in
                 Row(offer: offer, picked: browser.picked == index)
-                    .contentShape(Rectangle())
+                    .contentShape(Capsule(style: .continuous))
                     .onTapGesture { browser.take(offer) }
             }
             if let note = browser.switcherNote {
@@ -191,9 +191,9 @@ struct Omnibox: View {
             }
         }
         .padding(6)
-        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .strokeBorder(Palette.hairline, lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.07), radius: 20, y: 6)
@@ -278,10 +278,10 @@ struct Omnibox: View {
             .padding(.vertical, 9)
             .background {
                 if picked {
-                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    Capsule(style: .continuous)
                         .fill(Palette.wash)
                 } else if hovering {
-                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    Capsule(style: .continuous)
                         .fill(Palette.hover)
                 }
             }
@@ -343,7 +343,7 @@ private struct SiteChip: View {
         }
         .padding(.horizontal, 8)
         .frame(height: 22)
-        .background(Palette.wash, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+        .background(Palette.wash, in: Capsule(style: .continuous))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("正在搜索 \(site.name)")
     }
@@ -371,7 +371,7 @@ private struct SiteOfferRow: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 9)
         .background {
-            if hovering { RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Palette.hover) }
+            if hovering { Capsule(style: .continuous).fill(Palette.hover) }
         }
         .onHover { hovering = $0 }
         .accessibilityElement(children: .ignore)
@@ -430,7 +430,7 @@ private struct Breath: NSViewRepresentable {
             CATransaction.setDisableActions(true)
             glow.bounds = bounds
             glow.position = CGPoint(x: bounds.midX, y: bounds.midY)
-            glow.shadowPath = CGPath(roundedRect: bounds, cornerWidth: 26, cornerHeight: 26, transform: nil)
+            glow.shadowPath = RoundedRectangle(cornerRadius: 22, style: .continuous).path(in: bounds).cgPath
             effectiveAppearance.performAsCurrentDrawingAppearance { glow.shadowColor = Palette.NS.ink.cgColor }
             CATransaction.commit()
             breathe()

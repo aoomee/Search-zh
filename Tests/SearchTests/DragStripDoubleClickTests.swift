@@ -5,8 +5,7 @@ import XCTest
 @testable import Search
 
 /// Double-clicking the top of the window zooms once instead of zooming and
-/// immediately bouncing back, and double-clicking empty tab-row space opens a
-/// new tab without also zooming the window.
+/// immediately bouncing back. Empty tab-row space has the same behavior.
 ///
 /// Since idea 744 kept `window.isMovable = true` while hovering `DragStrip`,
 /// AppKit's `NSThemeFrame` title bar double-click recognizer fires inside the
@@ -67,7 +66,7 @@ final class DragStripDoubleClickTests: XCTestCase {
     }
 
     func testDoubleClickInTitlebarZoomsOnceWhenMovable() async throws {
-        let (window, _) = makeWindow(reserved: 0, trailing: 0, onDoubleClick: nil)
+        let (window, _) = makeWindow(reserved: 0, trailing: 0)
         sendDoubleClick(at: NSPoint(x: 400, y: window.frame.height - 10), in: window)
 
         XCTAssertEqual(window.zoomCalls, 1, "AppKit and DragStrip must not both zoom on one double-click")
@@ -76,7 +75,7 @@ final class DragStripDoubleClickTests: XCTestCase {
     }
 
     func testDoubleClickWhenAlreadyZoomedRestoresOnce() async throws {
-        let (window, _) = makeWindow(reserved: 0, trailing: 0, onDoubleClick: nil)
+        let (window, _) = makeWindow(reserved: 0, trailing: 0)
         window.zoom(nil)
         window.zoomCalls = 0
         XCTAssertTrue(window.isZoomed)
@@ -87,26 +86,23 @@ final class DragStripDoubleClickTests: XCTestCase {
         XCTAssertFalse(window.isZoomed, "window stays restored after double-clicking the top")
     }
 
-    func testDoubleClickInEmptyTabRowOpensNewTabWithoutZooming() async throws {
-        var opened = 0
-        let (window, _) = makeWindow(reserved: 250, trailing: 80) { opened += 1 }
+    func testDoubleClickInEmptyTabRowZoomsOnce() async throws {
+        let (window, _) = makeWindow(reserved: 250, trailing: 80)
         sendDoubleClick(at: NSPoint(x: 400, y: window.frame.height - 20), in: window)
 
-        XCTAssertEqual(opened, 1, "empty tab row opens a new tab on double-click")
-        XCTAssertEqual(window.zoomCalls, 0, "empty tab row double-click must not also zoom the window")
+        XCTAssertEqual(window.zoomCalls, 1)
+        XCTAssertTrue(window.isZoomed)
     }
 
     func testDoubleClickAboveReservedTabsZoomsWithoutOpeningNewTab() async throws {
-        var opened = 0
-        let (window, _) = makeWindow(reserved: 300, trailing: 80, band: TabBar.band) { opened += 1 }
+        let (window, _) = makeWindow(reserved: 300, trailing: 80, band: TabBar.band)
         sendDoubleClick(at: NSPoint(x: 150, y: window.frame.height - 6), in: window)
 
-        XCTAssertEqual(opened, 0, "margin above tabs is title bar, not empty tab row")
         XCTAssertEqual(window.zoomCalls, 1, "margin above tabs zooms once")
     }
 
     func testDoubleClickBelowNativeTitlebarRectZoomsOnce() async throws {
-        let (window, _) = makeWindow(reserved: 0, trailing: 0, onDoubleClick: nil)
+        let (window, _) = makeWindow(reserved: 0, trailing: 0)
         sendDoubleClick(at: NSPoint(x: 400, y: window.frame.height - 42), in: window)
 
         XCTAssertEqual(window.zoomCalls, 1, "lower part of the 52 pt strip zooms once")
@@ -118,8 +114,7 @@ final class DragStripDoubleClickTests: XCTestCase {
     private func makeWindow(
         reserved: CGFloat,
         trailing: CGFloat,
-        band: CGFloat? = nil,
-        onDoubleClick: (() -> Void)?
+        band: CGFloat? = nil
     ) -> (TrackingWindow, DragStrip.Strip) {
         let window = TrackingWindow(
             contentRect: NSRect(x: -20_000, y: -20_000, width: 800, height: 600),
@@ -141,7 +136,6 @@ final class DragStripDoubleClickTests: XCTestCase {
         strip.reserved = reserved
         strip.trailing = trailing
         strip.band = band
-        strip.onDoubleClick = onDoubleClick
         window.contentView?.addSubview(strip)
 
         // Match ContentView.dress + Lights.place: 52 pt titlebar container above contentView.

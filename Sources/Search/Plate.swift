@@ -88,10 +88,10 @@ struct Plate<Content: View, Foot: View>: View {
             }
         }
         .frame(width: width, alignment: .leading)
-        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .strokeBorder(Palette.hairline, lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.16), radius: 34, y: 12)
@@ -116,9 +116,9 @@ struct Card<Content: View>: View {
     var body: some View {
         VStack(spacing: 0) { content() }
             .background(Palette.ground)
-            .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .strokeBorder(Palette.hairline, lineWidth: 1)
             )
     }
@@ -227,7 +227,7 @@ struct Hunt: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Palette.wash, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(Palette.wash, in: Capsule(style: .continuous))
     }
 }
 

@@ -893,7 +893,7 @@ struct BookmarkOutline: View {
             .padding(.leading, indent(line.depth + 1) + 26)
             .padding(.vertical, 5)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
+            .contentShape(Capsule(style: .continuous))
             .modifier(Landing(
                 isFolder: false,
                 allowed: { allows(node.id) },
@@ -1078,7 +1078,7 @@ struct BookmarkOutline: View {
             .padding(.leading, CGFloat(depth) * 18 + 10)
             .padding(.trailing, 10)
             .padding(.vertical, 6)
-            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(wash))
+            .background(Capsule(style: .continuous).fill(wash))
             .overlay(alignment: aim == .before ? .top : .bottom) {
                 if aim == .before || aim == .after {
                     // Below an open folder is its first child's place.
@@ -1086,7 +1086,7 @@ struct BookmarkOutline: View {
                         .offset(y: aim == .before ? -1.5 : 1.5)
                 }
             }
-            .contentShape(Rectangle())
+            .contentShape(Capsule(style: .continuous))
             .opacity(dragging ? 0.35 : 1)
             .onTapGesture { open?() ?? toggle?() }
             .onHover { hovering = $0 }
@@ -1196,7 +1196,7 @@ struct BookmarkCard: View {
                         .onSubmit(close)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 5)
-                        .background(Palette.wash, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .background(Palette.wash, in: Capsule(style: .continuous))
                         .onChange(of: title) { _, typed in rename(typed) }
                 }
                 line("Folder") { folder }
@@ -1214,6 +1214,7 @@ struct BookmarkCard: View {
         .padding(14)
         .frame(width: 280)
         .popoverGround()
+        .presentationCornerRadius(20)
         .onAppear {
             title = bookmarks.bookmark(id)?.title ?? ""
             // The popover's window takes the keyboard only after this, and
@@ -1258,8 +1259,8 @@ struct BookmarkCard: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 5)
-            .background(Palette.wash, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-            .contentShape(Rectangle())
+            .background(Palette.wash, in: Capsule(style: .continuous))
+            .contentShape(Capsule(style: .continuous))
         }
         .menuStyle(.button)
         .buttonStyle(.plain)
@@ -1350,6 +1351,7 @@ struct BookmarksDropdown: View {
         }
         .frame(width: 280)
         .popoverGround()
+        .presentationCornerRadius(20)
     }
 
     /// The list as tall as the rows it shows, up to 360 points: the popover
@@ -1410,8 +1412,8 @@ struct BookmarksDropdown: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(hovering ? Palette.wash : .clear))
-            .contentShape(Rectangle())
+            .background(Capsule(style: .continuous).fill(hovering ? Palette.wash : .clear))
+            .contentShape(Capsule(style: .continuous))
             .onTapGesture(perform: act)
             .onHover { hovering = $0 }
         }
@@ -1567,8 +1569,8 @@ struct BookmarksPanel: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 9)
-            .background(hovering ? Palette.hover : .clear)
-            .contentShape(Rectangle())
+            .background(hovering ? Palette.hover : .clear, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .onTapGesture { open?() ?? show() }
             .onHover { hovering = $0 }
             .contextMenu {

@@ -54,7 +54,7 @@ struct ApplePasswordsCard: View {
                         .frame(width: 70)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 5)
-                        .background(Palette.wash, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                        .background(Palette.wash, in: Capsule(style: .continuous))
                         .focused($typing)
                         .onChange(of: code) { _, typed in
                             let digits = String(typed.filter(\.isNumber).prefix(6))
@@ -101,7 +101,7 @@ struct ApplePairingCard: View {
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(Palette.ink)
                     .frame(width: 22, height: 22)
-                    .background(Palette.wash, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    .background(Palette.wash, in: Capsule(style: .continuous))
                 VStack(alignment: .leading, spacing: 1) {
                     Text(title)
                         .font(.system(size: 12.5))
@@ -122,7 +122,7 @@ struct ApplePairingCard: View {
                         .frame(width: 70)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 5)
-                        .background(Palette.wash, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                        .background(Palette.wash, in: Capsule(style: .continuous))
                         .focused($typing)
                         .disabled(apple.state == .checking)
                         .onChange(of: code) { _, typed in
@@ -140,9 +140,9 @@ struct ApplePairingCard: View {
         }
         .padding(10)
         .frame(width: max(240, min(360, pairing.spot.width)), alignment: .leading)
-        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .strokeBorder(Palette.hairline, lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.14), radius: 22, y: 8)

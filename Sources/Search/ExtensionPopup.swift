@@ -1,5 +1,6 @@
 import AppKit
 import WebKit
+import QuartzCore
 
 // An extension's popup, in a popover of the browser's own.
 //
@@ -83,6 +84,12 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSPopo
         web.load(URLRequest(url: url))
 
         let stage = NSView(frame: NSRect(origin: .zero, size: ExtensionPopup.lastSize[context.uniqueIdentifier] ?? NSSize(width: 360, height: 240)))
+        for view in [stage, web] {
+            view.wantsLayer = true
+            view.layer?.masksToBounds = true
+            view.layer?.cornerRadius = 16
+            view.layer?.cornerCurve = .continuous
+        }
         stage.addSubview(web)
         let host = NSViewController()
         host.view = stage
@@ -94,7 +101,9 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSPopo
         popover.contentViewController = host
         popover.contentSize = stage.frame.size
         popover.behavior = .transient
-        popover.animates = !Motion.instant
+        PopoverSide.arrow(of: popover, hidden: true)
+        popover.hasFullSizeContent = true
+        popover.animates = false
         popover.delegate = self
 
         self.web = web
@@ -109,10 +118,7 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSPopo
         shown = false
         placement = anchor.map(ExtensionPopup.describe) ?? ["from": "window"]
         if let anchor, anchor.window != nil {
-            // Above or under the button, its arrow kept clear of the
-            // popover's corners near the screen's sides, and left out when
-            // that would take it off the button (PopoverSide).
-            PopoverSide.show(popover, relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY, pointed: true)
+            PopoverSide.show(popover, relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY)
         } else if let content = (targetBrowser?.window ?? NSApp.mainWindow ?? NSApp.windows.first(where: { $0.isVisible && $0.canBecomeMain && $0.frame.minX > -10_000 }))?.contentView {
             // No button to hang from — the column or the strip folded away:
             // where the buttons would be, the column's foot or the strip's
@@ -130,6 +136,8 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSPopo
             let edge: NSRectEdge = column ? (right ? .minX : .maxX) : (flipped ? .maxY : .minY)
             PopoverSide.show(popover, relativeTo: spot, of: content, preferredEdge: edge)
         }
+        // Keep WebKit in its window for measurement, with the entire shell invisible.
+        stage.window?.alphaValue = 0
         // Sized once loaded — or after a moment regardless, for a page that
         // never finishes loading.
         // Measured when the document is built (see below) or has loaded;
@@ -167,13 +175,16 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSPopo
 
     /// The page, at the popover's size, in view.
     private func reveal() {
-        guard !shown, let web, let stage = popover?.contentViewController?.view else { return }
+        guard !shown, let web, let popover, let stage = popover.contentViewController?.view else { return }
         shown = true
-        web.frame = NSRect(origin: .zero, size: popover?.contentSize ?? stage.bounds.size)
+        web.frame = NSRect(origin: .zero, size: popover.contentSize)
         web.autoresizingMask = [.width, .height]
+        popover.animates = !Motion.instant
+        web.alphaValue = 1
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = Motion.seconds(0.12)
-            web.animator().alphaValue = 1
+            context.duration = Motion.seconds(0.18)
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            stage.window?.animator().alphaValue = 1
         }
     }
 
@@ -314,10 +325,15 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSPopo
         if abs(size.width - popover.contentSize.width) > 1 || abs(size.height - popover.contentSize.height) > 1 {
             // The popover takes its size from its view controller, and goes
             // back to it: both are told.
-            popover.contentViewController?.preferredContentSize = size
-            popover.contentSize = size
-            popover.contentViewController?.view.setFrameSize(size)
-            if shown { web?.frame = NSRect(origin: .zero, size: size) }
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = shown ? Motion.seconds(0.18) : 0
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                context.allowsImplicitAnimation = context.duration > 0
+                popover.contentViewController?.preferredContentSize = size
+                popover.contentSize = size
+            }
+            // After reveal, the web view follows the animated content bounds
+            // through its autoresizing mask. Keep its measuring frame until then.
         }
         if let id = extensionID { ExtensionPopup.lastSize[id] = size }
         reveal()
@@ -355,7 +371,7 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSPopo
         if ticks <= 8 {
             web.evaluateJavaScript("(\(ExtensionPopup.preferred))()") { [weak self] value, _ in
                 MainActor.assumeIsolated {
-                    guard let self, let pair = value as? [Double], pair.count == 2 else { return }
+                    guard let self, self.web === web, let pair = value as? [Double], pair.count == 2 else { return }
                     let wanted = NSSize(width: pair[0], height: pair[1])
                     let now = popover.contentSize
                     if abs(wanted.width - now.width) > 2 || abs(wanted.height - now.height) > 2 { self.apply(wanted) }
@@ -369,7 +385,7 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSPopo
         // Bitwarden's narrow setting shrinks it.
         web.evaluateJavaScript("[\(ExtensionPopup.reach)('width'), (() => { const d = document.documentElement; return d && d.scrollHeight > d.clientHeight ? d.scrollHeight : 0; })(), (() => { const m = window.__searchSizing || (window.__searchSizing = {}), d = document.documentElement, v = document.compatMode === 'BackCompat' ? document.body : d, w = d.getBoundingClientRect().width, gutter = innerWidth - v.clientWidth; if (Math.abs(w - v.clientWidth) > 1) return (m.w = w) + gutter; return m.w && Math.abs(m.w - v.clientWidth) <= 1 ? m.w + gutter : 0; })()]") { value, _ in
             MainActor.assumeIsolated {
-                guard let pair = value as? [Double], pair.count == 3 else { return }
+                guard self.web === web, let pair = value as? [Double], pair.count == 3 else { return }
                 let now = popover.contentSize
                 let width = pair[2] > 0 ? max(25, pair[2].rounded(.up)) : max(now.width, pair[0])
                 let wanted = NSSize(width: min(800, width), height: min(600, max(now.height, pair[1])))

@@ -217,7 +217,8 @@ enum SiteCardPanel {
         let side = corner * 2 + 1
         let image = NSImage(size: NSSize(width: side, height: side), flipped: false) { rect in
             NSColor.black.setFill()
-            NSBezierPath(roundedRect: rect, xRadius: corner, yRadius: corner).fill()
+            let outline = RoundedRectangle(cornerRadius: corner, style: .continuous).path(in: rect)
+            NSBezierPath(cgPath: outline.cgPath).fill()
             return true
         }
         image.capInsets = NSEdgeInsets(top: corner, left: corner, bottom: corner, right: corner)
@@ -742,10 +743,10 @@ struct SiteCard: View {
                 RoundedRectangle(cornerRadius: MenuMetrics.highlight, style: .continuous)
                     .fill(hovering ? MenuMetrics.selection : .clear)
             )
-            .padding(.horizontal, MenuMetrics.inset)
-            .contentShape(Rectangle())
+            .contentShape(RoundedRectangle(cornerRadius: MenuMetrics.highlight, style: .continuous))
             .onTapGesture(perform: act)
             .onHover { hovering = $0 }
+            .padding(.horizontal, MenuMetrics.inset)
         }
     }
 
@@ -792,10 +793,10 @@ struct SiteCard: View {
                     .foregroundStyle(hovering ? Color.white : Color(nsColor: .labelColor))
                     .frame(width: 22, height: 18)
                     .background(
-                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        Capsule(style: .continuous)
                             .fill(hovering ? MenuMetrics.selection : .clear)
                     )
-                    .contentShape(Rectangle())
+                    .contentShape(Capsule(style: .continuous))
             }
             .buttonStyle(.plain)
             .onHover { hovering = $0 }
@@ -824,8 +825,8 @@ enum MenuMetrics {
     static let trailing: CGFloat = 17
     /// A separator's line, in from either edge.
     static let rule: CGFloat = 16
-    static let highlight: CGFloat = 6
-    static let corner: CGFloat = 12
+    static let highlight: CGFloat = 12
+    static let corner: CGFloat = 18
     /// The line under the pointer: the accent colour as a menu shows it over
     /// its glass, lighter than the accent itself (111, 162, 249 for blue).
     static let selection = Color(nsColor: NSColor(name: nil) { appearance in

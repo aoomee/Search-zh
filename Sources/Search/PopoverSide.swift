@@ -115,7 +115,7 @@ enum PopoverSide {
         case .under: side = flipped ? .maxY : .minY
         }
         let bare = pointed && strays(place.move, from: rect.size)
-        if arrow(of: popover, hidden: bare), bare {
+        if pointed, arrow(of: popover, hidden: bare), bare {
             popover.show(relativeTo: rect, of: view, preferredEdge: side)
             return
         }

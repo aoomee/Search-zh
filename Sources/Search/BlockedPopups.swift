@@ -147,8 +147,8 @@ struct PopupSign: View {
                     .symbolEffect(.bounce, value: tab.blockedPopups.last?.id)
                     .frame(width: 17, height: 15)
                     .background(Palette.ink.opacity(hovering || showing || shown ? 0.07 : 0),
-                                in: RoundedRectangle(cornerRadius: 4, style: .continuous))
-                    .contentShape(Rectangle())
+                                in: Capsule(style: .continuous))
+                    .contentShape(Capsule(style: .continuous))
             }
             .buttonStyle(.plain)
             .onHover { hovering = $0 }
@@ -207,12 +207,16 @@ struct BlockedPopupsMenu: View {
         }
         .frame(width: 290, alignment: .leading)
         .popoverGround()
+        .presentationCornerRadius(20)
     }
 
     private struct Item: View {
         let symbol: String
         let title: String
         var lines = 1
+        private var itemShape: AnyShape {
+            lines == 1 ? AnyShape(Capsule(style: .continuous)) : AnyShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
         let act: () -> Void
         @State private var hovering = false
 
@@ -225,8 +229,8 @@ struct BlockedPopupsMenu: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(hovering ? Palette.wash : .clear))
-            .contentShape(Rectangle())
+            .background(itemShape.fill(hovering ? Palette.wash : .clear))
+            .contentShape(itemShape)
             .onTapGesture(perform: act)
             .onHover { hovering = $0 }
         }

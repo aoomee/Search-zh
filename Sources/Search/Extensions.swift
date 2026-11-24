@@ -2418,10 +2418,10 @@ private struct ExtensionButtons: View {
                 ExtensionIcon(button: button, size: 15)
                     .frame(width: 26, height: 26)
                     .background(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        Capsule(style: .continuous)
                             .fill(hovering ? Palette.hover : .clear)
                     )
-                    .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .contentShape(Capsule(style: .continuous))
             }
             .buttonStyle(.plain)
             .onHover { hovering = $0 }
@@ -2475,7 +2475,7 @@ private struct ExtensionIcon: View {
                     .foregroundStyle(Palette.ground)
                     .padding(.horizontal, 3)
                     .frame(minWidth: 12, minHeight: 11)
-                    .background(Palette.ink, in: Capsule())
+                    .background(Palette.ink, in: Capsule(style: .continuous))
                     .fixedSize()
                     .offset(x: 5, y: 3)
             }
@@ -2604,6 +2604,7 @@ private struct ExtensionMenu: View {
         }
         .frame(width: 280)
         .popoverGround()
+        .presentationCornerRadius(20)
     }
 
     private struct Row: View {
@@ -2632,8 +2633,8 @@ private struct ExtensionMenu: View {
             .padding(.leading, 8)
             .padding(.trailing, 4)
             .frame(height: 30)
-            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(hovering ? Palette.wash : .clear))
-            .contentShape(Rectangle())
+            .background(Capsule(style: .continuous).fill(hovering ? Palette.wash : .clear))
+            .contentShape(Capsule(style: .continuous))
             .onTapGesture {
                 // The list goes first; the popup, if there is one, then
                 // hangs from the puzzle button it came out of.
@@ -2661,8 +2662,8 @@ private struct ExtensionMenu: View {
                     .font(.system(size: 10.5, weight: .medium))
                     .foregroundStyle(on || hovering ? Palette.ink : Palette.muted)
                     .frame(width: 22, height: 22)
-                    .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(hovering ? Palette.hover : .clear))
-                    .contentShape(Rectangle())
+                    .background(Capsule(style: .continuous).fill(hovering ? Palette.hover : .clear))
+                    .contentShape(Capsule(style: .continuous))
             }
             .buttonStyle(.plain)
             .onHover { hovering = $0 }
@@ -2690,8 +2691,8 @@ private struct ExtensionMenu: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(hovering ? Palette.wash : .clear))
-            .contentShape(Rectangle())
+            .background(Capsule(style: .continuous).fill(hovering ? Palette.wash : .clear))
+            .contentShape(Capsule(style: .continuous))
             .onTapGesture(perform: act)
             .onHover { hovering = $0 }
         }

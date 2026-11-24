@@ -73,7 +73,7 @@ private struct AgentStatusFace: View {
                         .font(.system(size: 13))
                         .foregroundStyle(Palette.muted)
                         .frame(width: 28, height: 28)
-                        .contentShape(Rectangle())
+                        .contentShape(Capsule(style: .continuous))
                         .background(ClickSpot { AgentControl.shared.stopButton = $0 })
                 }
                 .buttonStyle(.plain)
@@ -114,7 +114,7 @@ private struct AgentStop: View {
             Text("Stop")
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(hovering ? Palette.ink : Palette.ink.opacity(0.75))
-                .contentShape(Rectangle())
+                .contentShape(Capsule(style: .continuous))
                 .background(ClickSpot { AgentControl.shared.stopButton = $0 })
         }
         .buttonStyle(.plain)
@@ -164,9 +164,9 @@ struct AgentRowStop: View {
                 .foregroundStyle(Palette.ink)
                 .padding(.horizontal, 7)
                 .padding(.vertical, 2)
-                .background(Palette.ground, in: Capsule())
-                .overlay(Capsule().strokeBorder(Palette.hairline, lineWidth: 1))
-                .contentShape(Capsule())
+                .background(Palette.ground, in: Capsule(style: .continuous))
+                .overlay(Capsule(style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
+                .contentShape(Capsule(style: .continuous))
         }
         .buttonStyle(.plain)
         .shortcutHelp("Stop the coding agent. Its tabs stay where they are.", "file.stopAgent")
@@ -261,7 +261,7 @@ private struct AgentQuestion: View {
                     Text("Don't Allow")
                         .padding(.horizontal, 8)
                         .padding(.vertical, 6)
-                        .contentShape(Rectangle())
+                        .contentShape(Capsule(style: .continuous))
                         .background(ClickSpot { AgentControl.shared.refuseButton = $0 })
                 }
                 Button { AgentControl.shared.answer(allow: true, event: NSApp.currentEvent) } label: {
@@ -269,7 +269,7 @@ private struct AgentQuestion: View {
                         .foregroundStyle(Palette.ground)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(Palette.ink, in: Capsule())
+                        .background(Palette.ink, in: Capsule(style: .continuous))
                         .background(ClickSpot { AgentControl.shared.allowButton = $0 })
                 }
             }
@@ -279,8 +279,8 @@ private struct AgentQuestion: View {
         }
         .frame(maxWidth: 420, alignment: .leading)
         .padding(16)
-        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
+        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
         .shadow(color: .black.opacity(0.12), radius: 20, y: 6)
         .padding(.horizontal, 16)
     }

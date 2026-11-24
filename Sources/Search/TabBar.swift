@@ -64,7 +64,7 @@ struct TabBar: View {
                 // theirs, only as tall as they are: above and below them is
                 // title bar too.
                 DragStrip(reserved: lights + dot + leading + (making ? min(540, row.room) : row.run) + Metrics.tabGap + Metrics.plusWidth, trailing: doors + 12,
-                          band: making ? nil : TabBar.band, onDoubleClick: browser.newTab)
+                          band: making ? nil : TabBar.band)
                 // And the corner the lights sit in, which is title bar too —
                 // the one stretch left to take hold of when tabs fill the row.
                 DragStrip()
@@ -242,9 +242,9 @@ struct TabBar: View {
                             .frame(width: 15, height: 15)
                             .padding(.horizontal, 7)
                             .padding(.vertical, 6)
-                            .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                            .contentShape(Capsule(style: .continuous))
                             .background(
-                                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                Capsule(style: .continuous)
                                     .fill(plussed ? Palette.hover : .clear)
                             )
                     }
@@ -972,14 +972,14 @@ private struct TabPill: View, Equatable {
         .background { ground.animation(Motion.quick, value: rowCarrying) }
         .overlay {
             if selected {
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                Capsule(style: .continuous)
                     .strokeBorder(Palette.ink.opacity(0.35), lineWidth: 1)
                     .allowsHitTesting(false)
             }
         }
         .modifier(Shake(travel: shake))
         .modifier(Give(pressed: pressed && prefs.tabsGive))
-        .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .contentShape(Capsule(style: .continuous))
         .modifier(Pressing(down: $pressed, enabled: prefs.tabsGive))
         // Never both at once.
         //
@@ -1176,13 +1176,13 @@ private struct TabPill: View, Equatable {
                     ReadingFill(meter: tab.meter, width: span)
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .clipShape(Capsule(style: .continuous))
             .modifier(LiveMatch(id: "live", in: pill, tab: pinned ? nil : tab.id))
         } else if selected {
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
+            Capsule(style: .continuous)
                 .fill(greys.wash)
         } else if hovering {
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
+            Capsule(style: .continuous)
                 .fill(greys.hover)
         } else if pinned || compact || rowCarrying {
             // A letter with nothing behind it reads as debris. A pinned tab
@@ -1197,7 +1197,7 @@ private struct TabPill: View, Equatable {
             // tab just passed lies half under the one carried, its title at
             // its left under it too, and the half left showing was nothing,
             // so it seemed gone until the hand moved on (#898).
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
+            Capsule(style: .continuous)
                 .fill(greys.tile)
         }
     }

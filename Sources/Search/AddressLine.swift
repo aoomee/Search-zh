@@ -88,9 +88,9 @@ struct AddressLine: View {
             .padding(.trailing, browser.editingInline || !tab.isWeb ? 10 : 4)
             .frame(maxWidth: .infinity, alignment: .leading)
             .frame(height: height)
-            .background(greys.hover, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .background(greys.hover, in: Capsule(style: .continuous))
             .background(ViewAnchor(box: line))
-            .contentShape(Rectangle())
+            .contentShape(Capsule(style: .continuous))
             .onTapGesture { if !browser.editing { browser.edit(); browser.inlineEdit = true } }
             .shortcutHelp("Type an address or a search", "file.openAddress")
             // ⌘L's suggestions, hanging under the line at its width.

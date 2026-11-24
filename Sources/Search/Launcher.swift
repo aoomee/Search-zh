@@ -527,9 +527,9 @@ private struct LauncherView: View {
             .frame(height: 22)
             .padding(.horizontal, 22)
             .padding(.vertical, 14)
-            .background(Palette.ground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(Palette.ground, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .strokeBorder(refused ? Color.red.opacity(0.35) : Palette.hairline, lineWidth: 1)
                     .allowsHitTesting(false)
             )
@@ -550,14 +550,14 @@ private struct LauncherView: View {
         VStack(spacing: 0) {
             ForEach(Array(launcher.offers.enumerated()), id: \.element.id) { index, offer in
                 Omnibox.Row(offer: offer, picked: launcher.picked == index)
-                    .contentShape(Rectangle())
+                    .contentShape(Capsule(style: .continuous))
                     .onTapGesture { launcher.take(offer) }
             }
         }
         .padding(6)
-        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .strokeBorder(Palette.hairline, lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.14), radius: 20, y: 6)
@@ -738,12 +738,12 @@ struct LauncherKeyBox: View {
                     .padding(.horizontal, 10)
                     .frame(minWidth: 64, minHeight: 24)
                     .background(listening || hovering ? Palette.hover : Palette.ground,
-                                in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                                in: Capsule(style: .continuous))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        Capsule(style: .continuous)
                             .strokeBorder(listening ? Palette.ink.opacity(0.4) : Palette.hairline, lineWidth: 1)
                     )
-                    .contentShape(Rectangle())
+                    .contentShape(Capsule(style: .continuous))
             }
             .buttonStyle(.plain)
             .help("点按后按下快捷键。按 ⌫ 可清除")

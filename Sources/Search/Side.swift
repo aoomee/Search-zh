@@ -192,7 +192,7 @@ struct SideBar: View {
             // A right-click anywhere in the column with nothing of its own
             // there — under the tabs, between groups, the band at the top,
             // round the foot's buttons — brings up the column's menu.
-            DragStrip(reserved: 0, below: browser.makingSpace ? .greatestFiniteMagnitude : rowsEnd, onDoubleClick: browser.newTab,
+            DragStrip(reserved: 0, below: browser.makingSpace ? .greatestFiniteMagnitude : rowsEnd,
                       menu: browser.makingSpace ? nil : columnMenu)
 
             // The band the lights sit in is this mode's title bar: the window
@@ -1395,9 +1395,17 @@ struct SideBar: View {
     @ViewBuilder
     private func groupWash(_ colour: Int?) -> some View {
         if let colour, let opacity = Spaces.wash(colour, dark: colourScheme == .dark) {
-            RoundedRectangle(cornerRadius: icons ? 6 : 9, style: .continuous)
-                .fill(Spaces.colours[colour].opacity(opacity))
-                .allowsHitTesting(false)
+            GeometryReader { geometry in
+                let wash = Spaces.colours[colour].opacity(opacity)
+                if icons {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous).fill(wash)
+                } else if geometry.size.height <= GroupHeading.height {
+                    Capsule(style: .continuous).fill(wash)
+                } else {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous).fill(wash)
+                }
+            }
+            .allowsHitTesting(false)
         }
     }
 
@@ -1897,11 +1905,11 @@ private struct PinSquare: View, Equatable {
                     // Darker than the resting squares' grey by as much as a live
                     // row is darker than the white it sits on (Drice: the live
                     // pin barely showed among the others).
-                    RoundedRectangle(cornerRadius: scale * 9 / 34, style: .continuous)
+                    RoundedRectangle(cornerRadius: scale * 13 / 34, style: .continuous)
                         .fill(greys.pinLive)
                         .modifier(LiveMatch(id: LivePill.id(browser), in: pill))
                 } else {
-                    RoundedRectangle(cornerRadius: scale * 9 / 34, style: .continuous)
+                    RoundedRectangle(cornerRadius: scale * 13 / 34, style: .continuous)
                         .fill(selected ? greys.wash :
                               hovering ? greys.hover : greys.tile)
                 }
@@ -1910,7 +1918,7 @@ private struct PinSquare: View, Equatable {
         }
         .overlay {
             if selected {
-                RoundedRectangle(cornerRadius: scale * 9 / 34, style: .continuous)
+                RoundedRectangle(cornerRadius: scale * 13 / 34, style: .continuous)
                     .strokeBorder(Palette.ink.opacity(0.35), lineWidth: 1)
                     .allowsHitTesting(false)
             }
@@ -1923,7 +1931,7 @@ private struct PinSquare: View, Equatable {
             }
         }
         .animation(Motion.quick, value: peek?.id)
-        .contentShape(RoundedRectangle(cornerRadius: scale * 9 / 34, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: scale * 13 / 34, style: .continuous))
         .modifier(TabPress(enabled: !lettering && !pickedAmongOthers, active: live, selected: $selectedOnPress) {
             browser.clearTabSelection()
             browser.select(tab)
@@ -2182,14 +2190,14 @@ private struct SideRow: View, Equatable {
         .background { ground.animation(Motion.quick, value: live) }
         .overlay {
             if selected {
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                Capsule(style: .continuous)
                     .strokeBorder(Palette.ink.opacity(0.35), lineWidth: 1)
                     .allowsHitTesting(false)
             }
         }
         .modifier(Shake(travel: shake))
         .modifier(Give(pressed: pressed && prefs.tabsGive))
-        .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .contentShape(Capsule(style: .continuous))
         .modifier(OneClick(double: false) {
             guard interactive, !selectedOnPress, TabClick.flags.intersection([.command, .shift, .option]).isEmpty else { return }
             browser.clearTabSelection()
@@ -2238,13 +2246,13 @@ private struct SideRow: View, Equatable {
                     }
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .clipShape(Capsule(style: .continuous))
             .modifier(LiveMatch(id: LivePill.id(browser), in: pill, tab: tab.id))
         } else if selected {
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
+            Capsule(style: .continuous)
                 .fill(greys.wash)
         } else if hovering {
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
+            Capsule(style: .continuous)
                 .fill(greys.hover)
         }
     }
@@ -2289,10 +2297,10 @@ struct Quiet: View {
             .frame(height: height)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                Capsule(style: .continuous)
                     .fill(hovering ? greys.hover : .clear)
             )
-            .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .contentShape(Capsule(style: .continuous))
         }
         .buttonStyle(.plain)
         .onHover { hovering = $0 }
@@ -2403,10 +2411,10 @@ struct Door: View {
                 .offset(x: nudge)
                 .frame(width: 26, height: 26)
                 .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    Capsule(style: .continuous)
                         .fill(on ? greys.wash : (hovering ? greys.hover : .clear))
                 )
-                .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .contentShape(Capsule(style: .continuous))
         }
         .buttonStyle(.plain)
         .simultaneousGesture(

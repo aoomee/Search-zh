@@ -1124,14 +1124,14 @@ struct ContentView: View {
                 }
             }
                 .font(.system(size: 12))
-                .contentShape(Capsule())
+                .padding(.horizontal, 15)
+                .padding(.vertical, 9)
+                .background(Palette.ground, in: Capsule(style: .continuous))
+                .overlay(Capsule(style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
+                .contentShape(Capsule(style: .continuous))
                 .onTapGesture {
                     if let file = browser.announcedFile { NSWorkspace.shared.activateFileViewerSelecting([file]) }
                 }
-                .padding(.horizontal, 15)
-                .padding(.vertical, 9)
-                .background(Palette.ground, in: Capsule())
-                .overlay(Capsule().strokeBorder(Palette.hairline, lineWidth: 1))
                 .shadow(color: .black.opacity(0.10), radius: 18, y: 6)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .animation(Motion.settle, value: browser.announcement)
@@ -1146,7 +1146,7 @@ struct ContentView: View {
             .foregroundStyle(Palette.ground.opacity(0.92))
             .padding(.horizontal, 15)
             .padding(.vertical, 9)
-            .background(Palette.ink.opacity(0.92), in: Capsule())
+            .background(Palette.ink.opacity(0.92), in: Capsule(style: .continuous))
             .shadow(color: .black.opacity(0.18), radius: 18, y: 6)
     }
 
@@ -2151,8 +2151,8 @@ private struct ImportProgress: View {
         }
         .padding(14)
         .frame(width: 250, alignment: .leading)
-        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
+        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
         .shadow(color: .black.opacity(0.08), radius: 16, y: 5)
         .padding(20)
         .transition(.opacity)
@@ -2163,9 +2163,9 @@ private struct ImportProgress: View {
     private var bar: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                Capsule().fill(Palette.hairline)
+                Capsule(style: .continuous).fill(Palette.hairline)
                 if let fraction {
-                    Capsule().fill(Palette.ink.opacity(0.7)).frame(width: geo.size.width * fraction)
+                    Capsule(style: .continuous).fill(Palette.ink.opacity(0.7)).frame(width: geo.size.width * fraction)
                 }
             }
         }
@@ -2186,7 +2186,7 @@ private struct ImportProgress: View {
                     .foregroundStyle(Palette.ink)
                     .padding(.horizontal, 10)
                     .frame(height: 22)
-                    .background(Palette.ink.opacity(0.07), in: Capsule())
+                    .background(Palette.ink.opacity(0.07), in: Capsule(style: .continuous))
             }
             .buttonStyle(.plain)
             .disabled(job.cancelling)

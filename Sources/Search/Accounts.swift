@@ -84,10 +84,10 @@ struct AccountList: View {
         }
         .frame(width: max(240, min(360, asked.spot.width)), alignment: .leading)
         }
-        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .strokeBorder(Palette.hairline, lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.14), radius: 22, y: 8)
@@ -212,7 +212,7 @@ struct AccountList: View {
                         Spacer(minLength: 0)
                     }
                     .foregroundStyle((hovering && !onCross) || lit ? Palette.ink : Palette.muted)
-                    .contentShape(Rectangle())
+                    .contentShape(Capsule(style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .help("开启 Apple 密码并使用 Mac 上的验证码配对。可在“设置”›“密码”中关闭。")
@@ -232,7 +232,8 @@ struct AccountList: View {
             .padding(.leading, 10)
             .padding(.trailing, 8)
             .padding(.vertical, 6)
-            .background(hovering || lit ? Palette.hover : .clear)
+            .background(hovering || lit ? Palette.hover : .clear, in: Capsule(style: .continuous))
+            .contentShape(Capsule(style: .continuous))
             .onHover { hovering = $0 }
             .animation(Motion.quick, value: hovering)
             .animation(Motion.quick, value: onCross)
@@ -259,7 +260,7 @@ struct AccountList: View {
                     }
                     .foregroundStyle(Palette.ink)
                     .frame(width: 22, height: 22)
-                    .background(Palette.wash, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    .background(Palette.wash, in: Capsule(style: .continuous))
                     VStack(alignment: .leading, spacing: 1) {
                         Text(name)
                             .font(.system(size: 12.5))
@@ -274,8 +275,8 @@ struct AccountList: View {
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 7)
-                .background(hovering || lit ? Palette.hover : .clear)
-                .contentShape(Rectangle())
+                .background(hovering || lit ? Palette.hover : .clear, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
             .onHover { hovering = $0 }

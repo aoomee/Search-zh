@@ -293,9 +293,9 @@ private struct LinkChooserView: View {
         .padding(6)
         .frame(width: 360)
         .frame(maxHeight: chooser.room)
-        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .strokeBorder(Palette.hairline, lineWidth: 1)
         )
         // The card's shadow alone: without it the marked row and each dot
@@ -344,7 +344,7 @@ private struct LinkChooserView: View {
                                 .padding(.bottom, 3)
                         }
                         SpaceRow(row: row, marked: index == chooser.marked)
-                            .contentShape(Rectangle())
+                            .contentShape(Capsule(style: .continuous))
                             .onTapGesture { chooser.choose(row: index) }
                     }
                 }
@@ -396,7 +396,7 @@ private struct SpaceRow: View {
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(row.tint ?? Palette.muted)
                 .frame(width: SpaceDot.width, height: SpaceDot.width)
-                .background(row.tint?.opacity(0.14) ?? .clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .background(row.tint?.opacity(0.14) ?? .clear, in: Capsule(style: .continuous))
             Text(row.name)
                 .font(.system(size: 13))
                 .foregroundStyle(Palette.ink)
@@ -411,7 +411,7 @@ private struct SpaceRow: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
         .background(marked ? Palette.wash : hovering ? Palette.hover : .clear,
-                    in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                    in: Capsule(style: .continuous))
         .onHover { hovering = $0 }
         .animation(Motion.quick, value: hovering)
     }

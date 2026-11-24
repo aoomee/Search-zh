@@ -735,11 +735,6 @@ struct DragStrip: NSViewRepresentable {
     /// points in a 52-point strip, and the 12 above and below each were the
     /// one stretch of the top of the window nothing could take hold of.
     var band: CGFloat? = nil
-    /// Stands in for the title bar's own double-click, in a strip that is
-    /// empty tab-row rather than title bar: the empty space below or after
-    /// the tabs, where a double-click opens a new tab instead of zooming the
-    /// window.
-    var onDoubleClick: (() -> Void)? = nil
     /// What a right-click on the strip brings up, if anything: the
     /// column's own menu (ColumnMenu), made when it is asked for.
     var menu: (() -> NSMenu?)? = nil
@@ -777,7 +772,6 @@ struct DragStrip: NSViewRepresentable {
         view.below = below
         view.trailing = trailing
         view.band = band
-        view.onDoubleClick = onDoubleClick
         view.rightMenu = menu
         view.overPage = overPage
     }
@@ -795,7 +789,6 @@ struct DragStrip: NSViewRepresentable {
             guard let band else { return true }
             return abs(inside.y - bounds.height / 2) <= band / 2
         }
-        var onDoubleClick: (() -> Void)?
         var rightMenu: (() -> NSMenu?)?
         var overPage = false { didSet { if !overPage { passing = [] } } }
 
@@ -1008,12 +1001,7 @@ struct DragStrip: NSViewRepresentable {
             window.isMovable = Strip.hovered[ObjectIdentifier(window)] == nil
         }
 
-        /// A double-click does what a title bar's does, unless this strip
-        /// stands for empty tab row instead, in which case it opens a new
-        /// tab, the same as the button it is standing in for. Claimed via
-        /// NSClickGestureRecognizer rather than mouseUp so AppKit's own
-        /// NSThemeFrame title bar recognizer does not fire on the same click
-        /// while the window stays movable for window managers (idea 744).
+        /// Claim the double-click so AppKit's title-bar recognizer doesn't zoom twice.
         @objc private func handleDoubleClick(_ recognizer: NSClickGestureRecognizer) {
             guard !moved else { return }
             performDoubleClick(at: recognizer.location(in: self))
@@ -1021,20 +1009,8 @@ struct DragStrip: NSViewRepresentable {
 
         /// Runs the strip's double-click action at a point in the strip's own
         /// coordinates. Also called by `bench hit … double` on a hidden probe.
-        func performDoubleClick(at inside: NSPoint) {
-            guard let window else { return }
-            // Above or below the tabs is title bar, not empty tab row.
-            if let onDoubleClick, inside.x >= reserved, inside.x <= bounds.width - trailing {
-                onDoubleClick()
-                return
-            }
-            // System Settings › Desktop & Dock: what double-clicking a title
-            // bar should do. Unset means the default, which fills the screen.
-            switch UserDefaults.standard.string(forKey: "AppleActionOnDoubleClick") {
-            case "Minimize": window.miniaturize(nil)
-            case "None": break
-            default: window.zoom(nil)
-            }
+        func performDoubleClick(at _: NSPoint) {
+            window?.zoom(nil)
         }
     }
 }

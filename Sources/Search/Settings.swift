@@ -147,12 +147,12 @@ struct SettingsPanel: View {
             content
         }
         .frame(width: SettingsPanel.width, height: SettingsPanel.height)
-        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .strokeBorder(Palette.hairline, lineWidth: 1)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: .black.opacity(0.16), radius: 34, y: 12)
         .onChange(of: page) { _, page in Store.settings.set(page.rawValue, forKey: "settings.page") }
     }
@@ -240,8 +240,8 @@ struct SettingsPanel: View {
             }
             .padding(.horizontal, 9)
             .frame(height: 28)
-            .background(Palette.ground, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
+            .background(Palette.ground, in: Capsule(style: .continuous))
+            .overlay(Capsule(style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
         }
     }
 
@@ -269,7 +269,7 @@ struct SettingsPanel: View {
                             .foregroundStyle(Palette.ink)
                             .padding(.horizontal, 6)
                             .frame(height: 17)
-                            .background(Palette.ground, in: Capsule())
+                            .background(Palette.ground, in: Capsule(style: .continuous))
                     }
                 }
                 .foregroundStyle(on ? Palette.ink : (hovering ? Palette.ink.opacity(0.75) : Palette.muted))
@@ -278,16 +278,16 @@ struct SettingsPanel: View {
                 .frame(height: 30)
                 .background {
                     if on {
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        Capsule(style: .continuous)
                             .fill(Palette.ground)
                             .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
                             .matchedGeometryEffect(id: "chosen", in: chosen)
                     } else if hovering {
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        Capsule(style: .continuous)
                             .fill(Palette.hover)
                     }
                 }
-                .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .contentShape(Capsule(style: .continuous))
             }
             .buttonStyle(.plain)
             .onHover { hovering = $0 }
@@ -968,7 +968,7 @@ struct SettingsPanel: View {
         .font(.system(size: 12.5))
         .padding(.horizontal, 10)
         .padding(.vertical, 7)
-        .background(Palette.wash, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .background(Palette.wash, in: Capsule(style: .continuous))
         .padding(.leading, SettingsPanel.textInset)
         .padding(.trailing, 14)
         .padding(.bottom, 11)
@@ -996,7 +996,7 @@ struct SettingsPanel: View {
             .foregroundStyle(Palette.ink)
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
-            .background(Palette.wash, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .background(Palette.wash, in: Capsule(style: .continuous))
             .padding(.leading, SettingsPanel.textInset)
             .padding(.trailing, 14)
             .padding(.bottom, 6)
@@ -1030,7 +1030,7 @@ struct SettingsPanel: View {
             .foregroundStyle(Palette.ink)
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
-            .background(Palette.wash, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .background(Palette.wash, in: Capsule(style: .continuous))
             .padding(.leading, SettingsPanel.textInset)
             .padding(.trailing, 14)
             .padding(.bottom, 6)
@@ -1251,7 +1251,7 @@ struct SettingRow<Control: View>: View {
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(Palette.ink.opacity(0.78))
                     .frame(width: 26, height: 26)
-                    .background(Palette.wash, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .background(Palette.wash, in: Capsule(style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 5) {
                         Text(title)
@@ -1310,7 +1310,7 @@ struct Always: View {
             .foregroundStyle(Palette.muted)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
-            .background(Palette.wash, in: Capsule())
+            .background(Palette.wash, in: Capsule(style: .continuous))
     }
 }
 
@@ -1526,20 +1526,20 @@ struct Segmented<Option: Hashable>: View {
                     .padding(.vertical, 5)
                     .background {
                         if option == selection {
-                            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            Capsule(style: .continuous)
                                 .fill(Palette.ground)
                                 .shadow(color: .black.opacity(0.08), radius: 3, y: 1)
                                 .matchedGeometryEffect(id: "chosen", in: slide)
                         }
                     }
-                    .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .contentShape(Capsule(style: .continuous))
                     .onTapGesture {
                         withAnimation(Motion.settle) { selection = option }
                     }
             }
         }
         .padding(2)
-        .background(Palette.wash, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .background(Palette.wash, in: Capsule(style: .continuous))
         .animation(Motion.settle, value: selection)
     }
 }
@@ -1549,7 +1549,7 @@ struct Switch: View {
     @Binding var on: Bool
 
     var body: some View {
-        Capsule()
+        Capsule(style: .continuous)
             .fill(on ? Palette.ink : Palette.faint)
             .frame(width: 30, height: 18)
             .overlay(alignment: on ? .trailing : .leading) {
@@ -1558,7 +1558,7 @@ struct Switch: View {
                     .shadow(color: .black.opacity(0.18), radius: 1.5, y: 1)
                     .padding(2)
             }
-            .contentShape(Capsule())
+            .contentShape(Capsule(style: .continuous))
             .onTapGesture { withAnimation(Motion.settle) { on.toggle() } }
             .animation(Motion.settle, value: on)
     }
@@ -1594,8 +1594,8 @@ struct Steps: View {
         }
         .padding(.horizontal, 2)
         .frame(height: 24)
-        .background(Palette.ground, in: Capsule())
-        .overlay(Capsule().strokeBorder(Palette.hairline, lineWidth: 1))
+        .background(Palette.ground, in: Capsule(style: .continuous))
+        .overlay(Capsule(style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
     }
 
     private struct Step: View {
@@ -1645,9 +1645,9 @@ struct Pill: View {
                 .foregroundStyle(filled ? Palette.ground : tint)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .background(filled ? Palette.ink : (hovering ? Palette.hover : Palette.ground), in: Capsule())
-                .overlay(Capsule().strokeBorder(filled ? .clear : Palette.hairline, lineWidth: 1))
-                .contentShape(Capsule())
+                .background(filled ? Palette.ink : (hovering ? Palette.hover : Palette.ground), in: Capsule(style: .continuous))
+                .overlay(Capsule(style: .continuous).strokeBorder(filled ? .clear : Palette.hairline, lineWidth: 1))
+                .contentShape(Capsule(style: .continuous))
         }
         .buttonStyle(.plain)
         .onHover { hovering = $0 }
