@@ -51,9 +51,9 @@ struct UnreadBadge: View {
             // Its own size, whatever it is offered: hung from a point, it
             // was offered none, and "97" spilled out of a one-digit circle.
             .fixedSize()
-            .background(Capsule().fill(Color(red: 0.93, green: 0.24, blue: 0.21)))
+            .background(Capsule(style: .continuous).fill(Color(red: 0.93, green: 0.24, blue: 0.21)))
             .background {
-                if let ring { Capsule().fill(ring).padding(-1.5) }
+                if let ring { Capsule(style: .continuous).fill(ring).padding(-1.5) }
             }
             .shadow(color: .black.opacity(ring == nil ? 0.2 : 0), radius: 1, y: 0.5)
             .allowsHitTesting(false)

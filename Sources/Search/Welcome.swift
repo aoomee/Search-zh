@@ -250,7 +250,7 @@ struct WelcomePanel: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
         .animation(Motion.settle, value: arcSaid)
     }
 

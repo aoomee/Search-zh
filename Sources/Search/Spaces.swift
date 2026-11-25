@@ -111,10 +111,10 @@ enum Spaces {
         "graduationcap", "cart", "airplane", "dumbbell", "leaf", "heart",
     ]
     static let iconNames = [
-        "Work", "办公", "桌面", "笔记本", "代码", "终端",
+        "工作", "办公", "桌面", "笔记本", "代码", "终端",
         "AI", "思考", "灵感", "游戏", "休闲", "咖啡馆",
-        "Music", "电影", "艺术", "照片", "居家", "阅读",
-        "Studies", "购物", "旅行", "运动", "自然", "个人",
+        "音乐", "电影", "艺术", "照片", "居家", "阅读",
+        "学习", "购物", "旅行", "运动", "自然", "个人",
     ]
 
     private static var file: URL { Store.file("spaces.json") }

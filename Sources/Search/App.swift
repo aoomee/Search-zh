@@ -1033,8 +1033,8 @@ struct ContentView: View {
                 if browser.makingSpace, sidebar, browser.prefs.iconColumn {
                     NewSpaceCard(browser: browser)
                         .frame(width: 260)
-                        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
+                        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
                         .shadow(color: .black.opacity(0.12), radius: 18, y: 6)
                         .padding(sideOnRight ? .trailing : .leading, sideWidth + 12)
                         .padding(.top, 60)

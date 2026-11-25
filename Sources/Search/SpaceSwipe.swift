@@ -674,18 +674,18 @@ struct NewSpaceCard: View {
                     Segmented(options: [(true, "已登录"), (false, "未登录")], selection: $shared)
                         .fixedSize()
                         .help(saying)
-                    Pill("Cancel") { cancel() }
-                    Pill("Create", filled: true) { create() }
+                    Pill("取消") { cancel() }
+                    Pill("创建", filled: true) { create() }
                 }
                 .frame(height: Metrics.strip)
             } else {
                 VStack(spacing: 12) {
                     pick(size: 20, box: CGSize(width: 44, height: 40))
                     VStack(spacing: 4) {
-                        Text("New space")
+                        Text("新建空间")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(Palette.ink)
-                        Text("Its own tabs.")
+                        Text("在此空间中单独整理标签页。")
                             .font(.system(size: 11))
                             .foregroundStyle(Palette.muted)
                             .multilineTextAlignment(.center)
@@ -702,8 +702,8 @@ struct NewSpaceCard: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     HStack(spacing: 8) {
-                        Pill("Cancel") { cancel() }
-                        Pill("Create", filled: true) { create() }
+                        Pill("取消") { cancel() }
+                        Pill("创建", filled: true) { create() }
                     }
                 }
                 .padding(16)
@@ -726,10 +726,10 @@ struct NewSpaceCard: View {
                 .foregroundStyle(Palette.ink)
                 .frame(width: box.width, height: box.height)
                 .background(
-                    RoundedRectangle(cornerRadius: inline ? 8 : 10, style: .continuous)
+                    Capsule(style: .continuous)
                         .fill(hovering || choosing ? Palette.hover : .clear)
                 )
-                .contentShape(Rectangle())
+                .contentShape(Capsule(style: .continuous))
                 .id(icon)
                 .transition(.opacity)
         }
@@ -745,7 +745,7 @@ struct NewSpaceCard: View {
             .font(.system(size: inline ? 12.5 : 13))
             .padding(.horizontal, 10)
             .frame(height: inline ? 26 : 30)
-            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Palette.wash))
+            .background(Capsule(style: .continuous).fill(Palette.wash))
             .focused($typing)
             .onSubmit(create)
     }
@@ -760,10 +760,10 @@ struct NewSpaceCard: View {
                     .foregroundStyle(symbol == icon ? Palette.ink : Palette.muted)
                     .frame(width: 28, height: 28)
                     .background(
-                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        Capsule(style: .continuous)
                             .fill(symbol == icon ? Palette.wash : .clear)
                     )
-                    .contentShape(Rectangle())
+                    .contentShape(Capsule(style: .continuous))
                     .onTapGesture {
                         withAnimation(Motion.quick) { icon = symbol }
                         choosing = false
