@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-echo "=== Search 1.0.18 简体中文版一键编译脚本 (Apple Silicon / arm64) ==="
+echo "=== Search 1.0.19 简体中文版一键编译脚本 (Apple Silicon / arm64) ==="
 
 if ! command -v swift >/dev/null 2>&1; then
   echo "错误：未检测到 Swift / Xcode 工具链。请先安装 Xcode 16+，或使用仓库中的 GitHub Actions 云端打包。" >&2

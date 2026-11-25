@@ -15,6 +15,7 @@ struct ShortcutsPage: View {
     /// By name, or by key as the menus write it: "tab" and "⌘T" both find New Tab.
     private func shown(_ command: Command) -> Bool {
         if command.section == .spaces, !prefs.usesSpaces { return false }
+        if command.section == .profiles, !Profiles.shared.several { return false }
         if Command.ai.contains(command.id), !browser.prefs.ai { return false }
         if Command.dusk.contains(command.id), !browser.prefs.darkensPages { return false }
         if Command.archive.contains(command.id), prefs.tabLife == .never { return false }
@@ -59,7 +60,7 @@ struct ShortcutsPage: View {
                 let numbered = section == .tabs && numbers
                 if !commands.isEmpty || numbered {
                 VStack(alignment: .leading, spacing: 6) {
-                    Caption(section.rawValue)
+                    Caption(section.title)
                     Card {
                         ForEach(Array(commands.enumerated()), id: \.element.id) { index, command in
                             if index > 0 { Rule() }
@@ -107,7 +108,7 @@ extension ShortcutsPage {
         }
         if !commands.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
-                Caption("Extensions")
+                Caption("扩展")
                 Card {
                     ForEach(Array(commands.enumerated()), id: \.element.id) { index, item in
                         if index > 0 { Rule() }

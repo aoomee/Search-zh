@@ -1,4 +1,4 @@
-name: Build Search 1.0.18 (Simplified Chinese - Apple Silicon)
+name: Search-1.0.19-zh-Hans-arm64
 
 on:
   workflow_dispatch:
@@ -22,11 +22,11 @@ jobs:
         run: |
           chmod +x ./build.sh
           SEARCH_ARCH=arm64 ./build.sh release app
-          ditto -c -k --sequesterRsrc --keepParent build/Search.app build/Search-1.0.18-zh-Hans-arm64.zip
+          ditto -c -k --sequesterRsrc --keepParent build/Search.app build/Search-1.0.19-zh-Hans-arm64.zip
 
       - name: Upload Search.app ZIP Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Search-1.0.18-zh-Hans-arm64
-          path: build/Search-1.0.18-zh-Hans-arm64.zip
+          name: Search-1.0.19-zh-Hans-arm64
+          path: build/Search-1.0.19-zh-Hans-arm64.zip
           retention-days: 30

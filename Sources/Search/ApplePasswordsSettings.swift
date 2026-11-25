@@ -20,8 +20,8 @@ struct ApplePasswordsCard: View {
                 }
             } else {
                 Card {
-                    Line("Passwords from Apple's Passwords app",
-                         "Accounts and verification codes saved in the Passwords app, under their box. Unofficial: Search talks to the helper Apple made for its Chrome extension, as that extension. Never in private tabs.") {
+                    Line("使用 Apple“密码” App 中的密码",
+                         "在登录框下方显示“密码” App 中存储的账号和验证码。此集成为非官方实现：Search 使用 Apple 为 Chrome 扩展提供的辅助程序。无痕标签页中停用此功能。") {
                         Switch(on: $prefs.applePasswords)
                     }
                     if prefs.applePasswords {
@@ -39,14 +39,20 @@ struct ApplePasswordsCard: View {
 
     @ViewBuilder private var pairing: some View {
         switch apple.state {
-        case .idle:
-            Line(apple.trouble ?? "未连接", "你的 Mac 会显示一个验证码，请在此输入。每次启动 Search 只需配对一次，且仅在首次需要使用账号时提示：在登录框下方，点按“连接 Apple 密码…”即可输入。") {
-                Pill("Connect…") { Task { await apple.connect() } }
+        case .idle, .starting:
+            // One row for both, its button kept and only greyed while
+            // starting: a start that fails at once leaves it as it was (idea 781).
+            if apple.refused {
+                Line(apple.trouble ?? "未连接", "Search 启动 Apple 密码辅助程序时，macOS 会立即将其停止。iCloud 密码扩展也需要此辅助程序。") { EmptyView() }
+            } else {
+                Line(ApplePasswords.title(state: apple.state, trouble: apple.trouble, connecting: apple.connecting),
+                     "你的 Mac 会显示一个验证码，请在此输入。每次启动 Search 只需配对一次，且仅在首次需要使用账号时提示：在登录框下方，点按“连接 Apple 密码…”即可输入。") {
+                    Pill("连接…") { Task { await apple.connect() } }
+                        .disabled(apple.state == .starting)
+                }
             }
-        case .starting:
-            Line("Connecting…", "正在等待 Mac 显示验证码") { EmptyView() }
         case .code, .checking:
-            Line("Enter the code your Mac shows", apple.state == .checking ? "正在检查…" : "来自“密码”窗口的六位数字") {
+            Line("输入 Mac 显示的验证码", apple.state == .checking ? "正在检查…" : "来自“密码”窗口的六位数字") {
                 HStack(spacing: 8) {
                     TextField("000000", text: $code)
                         .textFieldStyle(.plain)
@@ -131,8 +137,9 @@ struct ApplePairingCard: View {
                             if digits.count == 6 { send() }
                         }
                         .onSubmit(send)
-                } else if apple.state == .idle {
-                    Pill("Try again", filled: true) { Task { await apple.connect() } }
+                } else if !apple.refused, apple.state == .idle || apple.state == .starting {
+                    Pill("重试", filled: true) { Task { await apple.connect() } }
+                        .disabled(apple.state == .starting)
                 }
                 Spacer(minLength: 0)
                 Pill("Cancel") { browser.endApplePairing(paired: false) }
@@ -158,7 +165,7 @@ struct ApplePairingCard: View {
     private var title: String {
         switch apple.state {
         case .idle: return apple.trouble ?? "未连接"
-        case .starting: return "正在连接 Apple 密码…"
+        case .starting: return apple.connecting ? "正在连接 Apple 密码…" : apple.trouble ?? "正在连接 Apple 密码…"
         case .code: return "输入 Mac 显示的验证码"
         case .checking: return "正在检查…"
         case .paired: return "已连接"
@@ -168,7 +175,7 @@ struct ApplePairingCard: View {
     private var detail: String {
         switch apple.state {
         case .starting: return "你的 Mac 稍后会显示一个六位验证码"
-        case .code, .checking: return "Six digits, from the Passwords window. Once per launch of Search."
+        case .code, .checking: return "输入“密码”窗口中显示的六位验证码。每次启动 Search 只需验证一次。"
         default: return "Apple 密码"
         }
     }

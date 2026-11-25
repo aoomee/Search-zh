@@ -55,6 +55,23 @@ enum WhatsNew {
         Toggle(title: "页面 AI", detail: "总结页面内容或直接提问。可在“设置 › AI”中选择运行方式。",
                since: "1.0.5", get: { $0.ai }, set: { $0.ai = $1 }),
     ] : []) + [
+        Toggle(title: "在边栏中显示书签栏", detail: "在每个空间的边栏顶部显示书签栏。",
+               since: "1.0.19", get: { $0.bookmarksInSidebar }, set: { $0.bookmarksInSidebar = $1 }),
+        Toggle(title: "在窗口中央显示悬浮地址栏", detail: "与 Arc 一样，按 ⌘T 或 ⌘L 时，地址栏会显示在窗口中央略靠上的位置。",
+               since: "1.0.19", get: { $0.fieldOnWindow }, set: { $0.fieldOnWindow = $1 }),
+        Toggle(title: "使用鼠标滚轮时平滑滚动", detail: "与 Chrome 一样，每滚动一格都会平滑移动页面。触控板保持原有行为。",
+               since: "1.0.19", get: { $0.wheelGlides }, set: { $0.wheelGlides = $1 }),
+        Toggle(title: "隐藏标签栏时显示加载进度线", detail: "收起标签栏后，在页面顶部用细线显示加载进度。",
+               since: "1.0.19", get: { $0.showsLoadingLine }, set: { $0.showsLoadingLine = $1 }),
+        Toggle(title: "点按当前标签页以编辑网址", detail: "只编辑网址。仍可从右键菜单的“网站信息…”打开信息卡片。",
+               since: "1.0.19", get: { $0.tabClickAddressOnly }, set: { $0.tabClickAddressOnly = $1 }),
+        Toggle(title: "填充密码前使用触控 ID", detail: "在网页上填充已存储的密码前，使用触控 ID 或 Mac 密码验证身份。",
+               since: "1.0.19", get: { $0.asksBeforeFilling }, set: { $0.asksBeforeFilling = $1 }),
+        Toggle(title: "书签栏仅显示图标", detail: "每个书签仅显示网站图标，悬停时显示名称。文件夹保留名称。",
+               since: "1.0.19", get: { $0.bookmarksIconsOnly }, set: { $0.bookmarksIconsOnly = $1 }),
+        Toggle(title: "固定标签页上的未读数", detail: "在 WhatsApp 或 Discord 的固定标签页上以角标显示未读数。",
+               since: "1.0.19", get: { $0.showsPinCounts }, set: { $0.showsPinCounts = $1 }),
+
         Toggle(title: "边栏按钮", detail: "位于窗口按钮旁，与 ⌘S 一样可隐藏边栏。",
                since: "1.0.18", get: { $0.foldButton }, set: { $0.foldButton = $1 }),
         Toggle(title: "缩窄为图标", detail: "将边栏拖窄即可变为一列网站图标。",
@@ -182,6 +199,7 @@ enum WhatsNew {
     ]
 
     static let releases: [Release] = [
+        Release(version: "1.0.19"),
         Release(version: "1.0.18"),
         Release(version: "1.0.17"),
         Release(version: "1.0.16"),
@@ -239,6 +257,14 @@ enum WhatsNew {
         return true
     }
 
+    /// Search › What's New… and the About window's button (idea 968): this
+    /// version's card again, exactly as after an update, switches and all.
+    /// Nothing is marked: the card was already seen once.
+    @MainActor static func showAgain(in browser: Browser) {
+        guard current != nil else { return }
+        browser.newsShowing = true
+    }
+
     // MARK: - every version's notes
 
     /// What a version brought, for Settings › About › What's New…
@@ -254,6 +280,40 @@ enum WhatsNew {
 
     /// Newest first.
     static let notes: [Notes] = [
+        Notes(
+            version: "1.0.19", date: "2026年11月23日",
+            headline: "修复了你们反馈的问题，也带来了更多熟悉的 Arc 操作。",
+            new: [
+                "“设为 Arc 风格”现在也能启用 Arc 较新的操作习惯。你可以在欢迎页面或从 Arc 导入后选择它。",
+                "选择“Search › 新版功能…”即可重新打开此卡片。",
+                "新增“文件 › 打开文件…”、“粘贴并匹配样式”、“在无痕标签页中打开链接”、“在分屏视图中打开图像”和“在分组中新建标签页”。",
+                "书签栏放不下的项目可从末端的 » 打开。书签可只显示图标；用鼠标中键或按住 ⌘ 点按文件夹可打开其中的全部书签。",
+                "在“设置 › 密码”中，可要求在填充已存储的密码前使用触控 ID。",
+                "固定标签页可显示未读数。在“设置 › 隐私”中，可查看各网站的摄像头、麦克风、位置和通知权限。",
+                "在“设置 › 键盘与鼠标 › 快捷键”中，可为切换到上一个或下一个空间，以及切换到各个个人资料设置快捷键。",
+                "在“设置 › 外观”中，可分别隐藏后退、前进、重新载入和边栏底部的各个按钮。",
+                "在“设置 › 扩展”中，可添加其他 App 随附的 Safari 扩展。此功能默认关闭。",
+            ],
+            better: [
+                "uBlock Origin Lite 现在从启动之初就能拦截内容。",
+                "Chrome 网上应用店中的已安装扩展现在可获得与新安装时相同的更新。检查失败后会在一小时内重试。",
+                "更多登录页面现在可以使用已存储的密码，填充过程也更加安全。",
+                "在全屏窗口中，Esc 键会像在 Safari 中一样交由页面处理。",
+                "启用“切换 App 时自动悬浮视频”后，视频会等到窗口离开视野才悬浮。",
+                "点按“仍要继续”时，只会信任你刚查看的那份证书。",
+                "扩展管理器现在可通过 chrome.management 查看已安装的扩展。",
+            ],
+            fixed: [
+                "修复了 uBlock Origin 弹窗、Readwise Highlighter、Raindrop.io 登录、Zotero Connector 和 Claude 侧面板的问题。",
+                "修复了在 Google 表格中横向轻扫或快速滚动时意外返回上一页的问题。",
+                "修复了分屏时出现两排窗口按钮，以及全屏栏比 Safari 更高的问题。",
+                "修复了退出全屏后视频画面变白，以及 YouTube 页面被当作下载打开的问题。",
+                "提高了浅色模式下液态玻璃标签页的可见度，并修复了侧面板闪白的问题。",
+                "修复了标签页很多时，地址栏获得键盘焦点会导致窗口短暂无响应的问题。",
+                "修复了 Enhancer for YouTube 按钮重复出现四次，以及扩展列表在屏幕角落打开后立即关闭的问题。",
+                "修复了跨空间使用画中画返回按钮、缩窄边栏后的行布局，以及标签页重命名后标题无法正确更新的问题。",
+            ]
+        ),
         Notes(
             version: "1.0.18", date: "2026年11月22日",
             headline: "初始即支持同步、邮件接收更新动态，以及大家反馈的问题修复。",
@@ -736,13 +796,13 @@ struct WhatsNewCard: View {
     private var showsOptIn: Bool { (optInForced ?? offering ?? OptIn.offered()) && (optInForced != nil || reach.online) }
 
     var body: some View {
-        Plate("New in Search \(release.version)", width: 460, close: close) {
+        Plate("Search \(release.version) 的新功能", width: 460, close: close) {
             VStack(alignment: .leading, spacing: 14) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 14) {
                         rows((listed?.leading ?? []) + WhatsNew.rows(for: release, prefs: prefs).own)
                         if let earlier = listed?.earlier, !earlier.isEmpty {
-                            Caption("From earlier versions, in case you missed them")
+                            Caption("回顾之前版本的功能")
                                 .padding(.top, 6)
                             rows(earlier)
                         }
@@ -757,13 +817,13 @@ struct WhatsNewCard: View {
         } foot: {
             HStack {
                 Button(action: notes) {
-                    Text("Everything that's new…")
+                    Text("查看所有更新…")
                         .font(.system(size: 12))
                         .foregroundStyle(Palette.muted)
                 }
                 .buttonStyle(.plain)
                 Spacer()
-                Pill("Close", filled: true, action: close)
+                Pill("关闭", filled: true, action: close)
             }
         }
         .onAppear {
@@ -801,7 +861,7 @@ struct ReleaseNotesPanel: View {
     let close: () -> Void
 
     var body: some View {
-        Plate("What's New", width: 560, close: close) {
+        Plate("新版功能", width: 560, close: close) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 26) {
                     ForEach(WhatsNew.notes, id: \.version) { note in
@@ -831,9 +891,9 @@ struct ReleaseNotesPanel: View {
                 .font(.system(size: 13))
                 .foregroundStyle(Palette.ink)
                 .fixedSize(horizontal: false, vertical: true)
-            list("New", note.new)
-            list("Better", note.better)
-            list("Fixed", note.fixed)
+            list("新功能", note.new)
+            list("改进", note.better)
+            list("问题修复", note.fixed)
         }
     }
 

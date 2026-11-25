@@ -174,7 +174,21 @@ struct KeyCombo: Codable, Hashable {
 /// A menu command, and the key it has unless you give it another.
 struct Command: Identifiable {
     enum Section: String, CaseIterable {
-        case app = "Search", file = "File", edit = "Edit", view = "View", tabs = "Tabs", spaces = "Spaces", bookmarks = "Bookmarks", history = "History"
+        case app = "Search", file = "File", edit = "Edit", view = "View", tabs = "Tabs", spaces = "Spaces", profiles = "Profiles", bookmarks = "Bookmarks", history = "History"
+
+        var title: String {
+            switch self {
+            case .app: return "Search"
+            case .file: return "文件"
+            case .edit: return "编辑"
+            case .view: return "显示"
+            case .tabs: return "标签页"
+            case .spaces: return "空间"
+            case .profiles: return "个人资料"
+            case .bookmarks: return "书签"
+            case .history: return "历史记录"
+            }
+        }
     }
 
     let id: String
@@ -215,6 +229,7 @@ struct Command: Identifiable {
         Command("file.newPrivateTab", "新建无痕标签页", .file, KeyCombo("n", shift: true)) { $0.newShyTab() },
         Command("file.reopen", "重新打开已关闭的标签页", .file, KeyCombo("t", shift: true)) { $0.reopen() },
         Command("file.openAddress", "打开网址…", .file, KeyCombo("l")) { $0.edit() },
+        Command("file.openFile", "打开文件…", .file, KeyCombo("o")) { $0.openFile() },
         Command("file.closeTab", "关闭标签页", .file, KeyCombo("w")) { $0.closeFront() },
         Command("file.closeWindow", "关闭窗口", .file, KeyCombo("w", shift: true)) { $0.closeWindow() },
         Command("file.import", "导入数据…", .file, nil) { $0.bringingIn = "" },
@@ -227,6 +242,9 @@ struct Command: Identifiable {
             AgentControl.shared.stopSession()
         },
 
+        Command("edit.pasteMatchStyle", "粘贴并匹配样式", .edit, KeyCombo("v", shift: true, option: true)) { _ in
+            Browser.pasteMatchingStyle()
+        },
         Command("edit.find", "在页面上查找…", .edit, KeyCombo("f")) { $0.openFind() },
         Command("edit.findNext", "查找下一个", .edit, KeyCombo("g")) { $0.look(forward: true) },
         Command("edit.findPrevious", "查找上一个", .edit, KeyCombo("g", shift: true)) { $0.look(forward: false) },
@@ -339,6 +357,18 @@ struct Command: Identifiable {
                 KeyCombo(String(number), command: false, control: true)) { browser in
             browser.switchSpace(index: number - 1)
         }
+    } + [
+        // As the swipe goes, and stopping at the ends as it does. No key
+        // until you give one in Settings › Shortcuts (idea 761).
+        Command("spaces.next", "下一个空间", .spaces, nil) { $0.stepSpace(1) },
+        Command("spaces.previous", "上一个空间", .spaces, nil) { $0.stepSpace(-1) },
+        // No key until you give one, and listed only once there are two
+        // profiles (#1437). Next and Previous go round, so one key goes
+        // back and forth between two profiles.
+        Command("profiles.next", "下一个个人资料", .profiles, nil) { Profiles.step(1, from: $0) },
+        Command("profiles.previous", "上一个个人资料", .profiles, nil) { Profiles.step(-1, from: $0) },
+    ] + (1...9).map { number in
+        Command("profiles.\(number)", "个人资料 \(number)", .profiles, nil) { Profiles.go(index: number - 1, from: $0) }
     }
 }
 

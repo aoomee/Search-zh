@@ -47,6 +47,11 @@ struct WelcomePanel: View {
     var optInEmail = ""
     @State private var began = false
 
+    /// Set Up Like Arc from the welcome: what it turned on, for its line
+    /// and Undo. Nothing changes unless it is pressed.
+    @State private var arcSaid: String?
+    @ObservedObject private var likeArc = LikeArc.shared
+
     private var pages: Int { offersEmail ? 5 : 4 }
 
     var body: some View {
@@ -210,7 +215,43 @@ struct WelcomePanel: View {
                     .foregroundStyle(Palette.muted)
                 Segmented(options: Glyph.allCases.map { ($0, $0.title) }, selection: $prefs.glyph)
             }
+            arcCard
         }
+    }
+
+    /// Coming from Arc? One button for Arc's way (LikeArc), optional like
+    /// everything here: Continue goes on without it.
+    private var arcCard: some View {
+        HStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("从 Arc 迁移？")
+                    .font(.system(size: 13.5))
+                    .foregroundStyle(Palette.ink)
+                Text(arcSaid ?? "将标签栏放在左侧，启用空间与固定行，并沿用 Arc 的习惯：12 小时后关闭标签页、速览链接和悬浮播放视频。")
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(Palette.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 8)
+            if arcSaid != nil, likeArc.undoable(prefs) {
+                Big("撤销") {
+                    withAnimation(Motion.glide) { likeArc.undo(prefs) }
+                    arcSaid = nil
+                }
+            } else if prefs.looksLikeArc {
+                Text(arcSaid == nil ? "设为 Arc 风格" : "")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Palette.faint)
+            } else {
+                Big("设为 Arc 风格") {
+                    arcSaid = LikeArc.said(withAnimation(Motion.glide) { likeArc.setUp(prefs) })
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
+        .animation(Motion.settle, value: arcSaid)
     }
 
     private var links: some View {
@@ -411,8 +452,8 @@ struct WelcomePanel: View {
                     .foregroundStyle(filled ? Palette.ground : Palette.ink)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 9)
-                    .background(filled ? Palette.ink : (hovering ? Palette.hover : Palette.wash), in: Capsule())
-                    .contentShape(Capsule())
+                    .background(filled ? Palette.ink : (hovering ? Palette.hover : Palette.wash), in: Capsule(style: .continuous))
+                    .contentShape(Capsule(style: .continuous))
             }
             .buttonStyle(.plain)
             .onHover { hovering = $0 }

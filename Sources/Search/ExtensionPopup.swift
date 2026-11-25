@@ -83,6 +83,7 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
     func show(_ url: URL, for context: WKWebExtensionContext, from anchor: NSView?, in browser: Browser? = nil) {
         close(immediate: true)
         guard let configuration = context.webViewConfiguration else { return }
+        ExtensionSandbox.attach(configuration, for: context)
 
         let targetBrowser = browser ?? anchor?.window.flatMap(Browsers.browser(for:))
         let hostWindow = anchor?.window
@@ -578,13 +579,30 @@ final class ExtensionPopup: NSObject, WKUIDelegate, WKNavigationDelegate, NSWind
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { follow() }
 
-    func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration,
-                 for action: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
-        if let url = action.request.url, (try? Extensions.mayOpen(url)) != nil {
+    /// A link that asks for a new window becomes a tab, and the popup goes —
+    /// the way it does in Chrome when you follow a link out of one.
+    func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for action: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+        leave(for: action.request.url)
+        return nil
+    }
+
+    /// A link with target="_blank" (or a form aimed at a new window): in a
+    /// view built from an extension's configuration WebKit asks for its
+    /// policy and then never asks for the new view, so the click did
+    /// nothing — Raindrop.io's Sign in (idea 972). It's taken here instead.
+    /// window.open still comes through createWebViewWith above.
+    func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        guard action.targetFrame == nil, webView === web else { return decisionHandler(.allow) }
+        decisionHandler(.cancel)
+        leave(for: action.request.url)
+    }
+
+    private func leave(for url: URL?) {
+        // The same rule as tabs.create: never a file on this Mac, never javascript:.
+        if let url, (try? Extensions.mayOpen(url)) != nil {
             Extensions.shared.browser?.open(url, foreground: true)
         }
         close()
-        return nil
     }
 
     func windowDidResignKey(_ notification: Notification) {

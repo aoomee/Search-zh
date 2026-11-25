@@ -40,8 +40,7 @@ struct SettingsPanel: View {
     /// A row gone to from a result, lit for a moment.
     @State private var lit: String?
     /// What Set Up Like Arc changed, for Undo.
-    @State private var arcBefore: Preferences.ArcSetup? = SettingsPanel.arcBefore
-    @MainActor static var arcBefore: Preferences.ArcSetup?
+    @ObservedObject private var likeArc = LikeArc.shared
 
     enum Page: String, CaseIterable, Identifiable {
         case general, appearance, themes, tabs, browsing, spaces, passwords, privacy, ai, extensions, keyboard, about
@@ -410,10 +409,15 @@ struct SettingsPanel: View {
 
     @ViewBuilder
     private var results: some View {
-        let found = hits
-        if found.isEmpty {
+        let all = hits
+        if all.isEmpty {
             Card { Nothing("No setting called that. Try other words, like dark, tabs or video") }
         }
+        // What is always there and has nothing to set comes apart, after
+        // the settings: among them its row with no switch read as a setting
+        // gone missing (idea 483).
+        let found = all.filter { $0.kind != .note }
+        let always = all.filter { $0.kind == .note }
         let byGroup = Dictionary(grouping: found, by: \.group)
         ForEach(SettingsIndex.groups.filter { byGroup[$0.id] != nil }) { group in
             VStack(alignment: .leading, spacing: 8) {
@@ -438,6 +442,19 @@ struct SettingsPanel: View {
                 .buttonStyle(.plain)
                 .help("打开\(group.page.title)中的\(group.title)")
                 Card { rows(byGroup[group.id] ?? [], searched: true) }
+            }
+        }
+        if !always.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle").font(.system(size: 10.5, weight: .medium))
+                    Text("始终开启，无需设置".uppercased())
+                        .font(.system(size: 10.5, weight: .semibold))
+                        .tracking(0.4)
+                }
+                .foregroundStyle(Palette.muted)
+                .padding(.leading, 2)
+                Card { rows(always, searched: true) }
             }
         }
     }
@@ -645,11 +662,27 @@ struct SettingsPanel: View {
                 get: { prefs.doorsUp },
                 set: { on in withAnimation(Motion.glide) { prefs.doorsUp = on } }
             ))
+        case "helm.shown":
+            Ticks(items: [("后退", Binding(get: { !prefs.hidesBack }, set: { on in withAnimation(Motion.glide) { prefs.hidesBack = !on } })),
+                          ("前进", Binding(get: { !prefs.hidesForward }, set: { on in withAnimation(Motion.glide) { prefs.hidesForward = !on } })),
+                          ("重新载入", Binding(get: { !prefs.hidesReload }, set: { on in withAnimation(Motion.glide) { prefs.hidesReload = !on } }))])
+        case "foot.shown":
+            Ticks(items: [("扩展", Binding(get: { !prefs.hidesExtensionsDoor }, set: { on in withAnimation(Motion.glide) { prefs.hidesExtensionsDoor = !on } })),
+                          ("书签", Binding(get: { !prefs.hidesBookmarksDoor }, set: { on in withAnimation(Motion.glide) { prefs.hidesBookmarksDoor = !on } })),
+                          ("个人资料", Binding(get: { !prefs.hidesProfileDoor }, set: { on in withAnimation(Motion.glide) { prefs.hidesProfileDoor = !on } }))])
         case "glyph": Segmented(options: Glyph.allCases.map { ($0, $0.title) }, selection: $prefs.glyph)
         case "tabs.highContrast": Switch(on: $prefs.highContrastText)
         case "tabs.reading": Switch(on: $prefs.showsReading)
+        case "tabs.pinCounts": Switch(on: $prefs.showsPinCounts)
+        case "fold.loadingLine": Switch(on: $prefs.showsLoadingLine)
         case "tabs.give": Switch(on: $prefs.tabsGive)
         case "bookmarks.bar": Switch(on: $prefs.bookmarksBar)
+        case "bookmarks.iconsOnly": Switch(on: $prefs.bookmarksIconsOnly)
+        case "bookmarks.side":
+            Switch(on: Binding(
+                get: { prefs.bookmarksInSidebar },
+                set: { on in withAnimation(Motion.glide) { prefs.bookmarksInSidebar = on } }
+            ))
         case "motion.light": Switch(on: $prefs.lightMotion)
         case "motion.instant": Switch(on: $prefs.instantMotion)
         case "note.split": Always()
@@ -704,6 +737,7 @@ struct SettingsPanel: View {
                 get: { prefs.showsAddress },
                 set: { on in withAnimation(Motion.glide) { prefs.showsAddress = on } }
             ))
+        case "tabs.clickAddressOnly": Switch(on: $prefs.tabClickAddressOnly)
         case "note.groups", "note.awake": Always()
         default: EmptyView()
         }
@@ -776,20 +810,18 @@ struct SettingsPanel: View {
     private func spacesControl(_ id: String) -> some View {
         switch id {
         case "arc.setup":
-            if let before = arcBefore, prefs.looksLikeArc {
-                Pill("Undo") {
-                    withAnimation(Motion.glide) { prefs.restore(before) }
-                    arcBefore = nil
-                    SettingsPanel.arcBefore = nil
-                    browser.announce("Put back as it was")
+            if likeArc.undoable(prefs) {
+                Pill("撤销") {
+                    withAnimation(Motion.glide) { likeArc.undo(prefs) }
+                    browser.announce("已恢复之前的设置")
                 }
             } else if prefs.looksLikeArc {
-                Always(text: "Set up")
+                Always(text: "已设置")
             } else {
-                Pill("Set Up", filled: true) { setUpLikeArc() }
+                Pill("设为 Arc 风格", filled: true) { setUpLikeArc() }
             }
         case "arc.import":
-            Pill("Bring Over…") { browser.lead(to: InternalPage(.importing, "Arc")) }
+            Pill("导入…") { browser.lead(to: InternalPage(.importing, "Arc")) }
                 .disabled(!arcHere)
                 .opacity(arcHere ? 1 : 0.4)
         case "spaces": Switch(on: $prefs.usesSpaces)
@@ -804,6 +836,7 @@ struct SettingsPanel: View {
         case "pins.folders": Switch(on: $prefs.pinFolders)
         case "pins.commandNewTab": Switch(on: $prefs.pinCommandOpensTab)
         case "newtab.floating": Switch(on: $prefs.floatingNewTab)
+        case "field.window": Switch(on: $prefs.fieldOnWindow)
         case "newtab.recent": Switch(on: $prefs.recentInNewTab)
         case "newtab.arc": Switch(on: $prefs.arcTabPopup)
         case "commandbar": Switch(on: $prefs.commandBar)
@@ -819,6 +852,7 @@ struct SettingsPanel: View {
         case "passwords.open": Pill("Open…") { browser.lead(to: InternalPage(.passwords)) }
         case "passwords.save": Switch(on: $prefs.savesPasswords)
         case "passwords.fill": Switch(on: $prefs.fillsPasswords)
+        case "passwords.fill.prove": Switch(on: $prefs.asksBeforeFilling)
         case "passkeys": Switch(on: $prefs.passkeys)
         case "passwords.apple": Switch(on: $prefs.applePasswords)
         // Turned on, macOS is asked whether Search may read Contacts; a no,
@@ -867,6 +901,7 @@ struct SettingsPanel: View {
         case "links.peek.stays": Switch(on: $prefs.peekStays)
         case "links.optionSplit": Switch(on: $prefs.optionClickSplits)
         case "autoscroll": Switch(on: $prefs.autoScroll)
+        case "wheel.smooth": Switch(on: $prefs.wheelGlides)
         case "pages.bounce": Switch(on: $prefs.bounces)
         case "swipe.history": Switch(on: $prefs.holdsHistory)
         case "launcher.on": Switch(on: $prefs.launcher)
@@ -913,7 +948,7 @@ struct SettingsPanel: View {
         case "privacy.forget":
             if !searched {
                 Group {
-                    NotificationSites()
+                    PermissionSites(browser: browser, prefs: prefs)
                     PopupSiteList(prefs: prefs)
                 }
                 .under()
@@ -978,17 +1013,19 @@ struct SettingsPanel: View {
     private var keywordEditor: some View {
         if let current = draft {
             HStack(spacing: 8) {
-                TextField("yt", text: Binding(
+                // Plainly examples, not an entry already there (idea 810):
+                // "word" and "address", in italics, with "e.g.".
+                TextField("", text: Binding(
                     get: { current.keyword },
                     set: { draft?.keyword = $0 }
-                ))
+                ), prompt: Text("关键词").italic())
                 .textFieldStyle(.plain)
                 .frame(width: 50)
                 Text("→").foregroundStyle(Palette.muted)
-                TextField("https://www.youtube.com/results?search_query=%s", text: Binding(
+                TextField("", text: Binding(
                     get: { current.template },
                     set: { draft?.template = $0 }
-                ))
+                ), prompt: Text("搜索网址，用 %s 代表搜索词，例如 youtube.com/results?search_query=%s").italic())
                 .textFieldStyle(.plain)
                 .onSubmit(saveDraft)
             }
@@ -1048,7 +1085,7 @@ struct SettingsPanel: View {
     private var keywordDetail: String {
         guard let draft else { return SettingsIndex.item("search.keywords")?.detail ?? "" }
         if draft.keyword.isEmpty, draft.template.isEmpty {
-            return "输入关键词，再填入网站搜索网址，用 %s 代替搜索词"
+            return "先输入关键词（如 yt），再输入网站的搜索网址，并在网址中用 %s 代表搜索词"
         }
         return draftProblem ?? "输入 \(draft.keyword.trimmingCharacters(in: .whitespacesAndNewlines)) 将搜索 \(draft.name)"
     }
@@ -1106,11 +1143,8 @@ struct SettingsPanel: View {
     }
 
     private func setUpLikeArc() {
-        let before = prefs.arcSnapshot
-        let changed = withAnimation(Motion.glide) { prefs.setUpLikeArc() }
-        arcBefore = before
-        SettingsPanel.arcBefore = before
-        browser.announce(changed.isEmpty ? "已按 Arc 风格配置" : "已开启：" + changed.joined(separator: ", "))
+        let changed = withAnimation(Motion.glide) { likeArc.setUp(prefs) }
+        browser.announce(LikeArc.said(changed))
     }
 
     // MARK: - about
@@ -1545,6 +1579,22 @@ struct Segmented<Option: Hashable>: View {
 }
 
 /// On or off, in ink rather than in blue.
+/// A few things each shown or not, side by side: a tick for each
+/// (Back, Forward, Reload…).
+struct Ticks: View {
+    let items: [(String, Binding<Bool>)]
+
+    var body: some View {
+        HStack(spacing: 14) {
+            ForEach(items.indices, id: \.self) { index in
+                Toggle(items[index].0, isOn: items[index].1)
+                    .toggleStyle(.checkbox)
+                    .font(.system(size: 12.5))
+            }
+        }
+    }
+}
+
 struct Switch: View {
     @Binding var on: Bool
 
@@ -1655,21 +1705,102 @@ struct Pill: View {
     }
 }
 
-/// Settings › Privacy: the sites allowed to send notifications, each with a
-/// way to take it back.
-private struct NotificationSites: View {
+/// Settings › Privacy: saved choices, reset one permission at a time.
+private struct PermissionSites: View {
+    let browser: Browser
+    @ObservedObject var prefs: Preferences
     @ObservedObject private var notifications = SiteNotifications.shared
+    @State private var query = ""
+    @FocusState private var searching: Bool
+    @State private var kind: CaptureChoices.Kind?
 
     var body: some View {
-        let sites = SiteNotifications.allowed
-        if !sites.isEmpty {
-            ForEach(sites, id: \.self) { site in
+        let saved = CaptureChoices.saved()
+        let search = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let sites = Dictionary(grouping: saved.filter {
+            (kind == nil || $0.kind == kind) &&
+            (search.isEmpty || $0.origin.localizedCaseInsensitiveContains(search))
+        }, by: \.origin)
+        if !saved.isEmpty {
+            Rule()
+            VStack(alignment: .leading, spacing: 10) {
+                Text("重置后，下次访问时会再次询问。正在使用的设备会继续运行。")
+                    .font(.system(size: 11.5)).foregroundStyle(Palette.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack {
+                    Hunt(text: $query, prompt: "查找网站", focus: $searching)
+                        .accessibilityLabel("查找网站")
+                    Picker("按权限筛选", selection: $kind) {
+                        Text("所有权限").tag(Optional<CaptureChoices.Kind>.none)
+                        ForEach(CaptureChoices.listedKinds) { permission in
+                            Text(permission.title).tag(Optional(permission))
+                        }
+                    }
+                    .labelsHidden().fixedSize()
+                    .accessibilityLabel("按权限筛选")
+                }
+            }
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            if sites.isEmpty { Nothing("没有匹配的网站") }
+            ForEach(sites.keys.sorted(), id: \.self) { origin in
                 Rule()
-                Line(URL(string: site).map(SiteCard.site) ?? site, "可发送通知") {
-                    Pill("Remove") { SiteNotifications.forget(site) }
+                PermissionSiteRow(origin: origin, entries: sites[origin, default: []],
+                                  notificationsEnabled: prefs.siteNotifications) { entry in
+                    browser.setSitePermission(nil, kind: entry.kind, origin: entry.origin)
                 }
             }
         }
+    }
+}
+
+private struct PermissionSiteRow: View {
+    let origin: String
+    let entries: [CaptureChoices.Saved]
+    let notificationsEnabled: Bool
+    let reset: (CaptureChoices.Saved) -> Void
+    @State private var expanded = false
+    @State private var hovering = false
+
+    var body: some View {
+        let count = entries.count == 1 ? "1 项权限" : "\(entries.count) 项权限"
+        Button { expanded.toggle() } label: {
+            HStack(spacing: 8) {
+                Text(origin).font(.system(size: 13)).foregroundStyle(Palette.ink)
+                Spacer(minLength: 8)
+                Text(count).font(.system(size: 11.5)).foregroundStyle(Palette.muted)
+                Image(systemName: expanded ? "chevron.down" : "chevron.right")
+                    .font(.system(size: 10, weight: .semibold)).foregroundStyle(Palette.muted)
+            }
+            .padding(.leading, 14 + SettingsPanel.listInset)
+            .padding(.trailing, 14).frame(minHeight: 44)
+            .contentShape(Capsule(style: .continuous))
+            .background(hovering ? Palette.hover : .clear, in: Capsule(style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .padding(.leading, -SettingsPanel.listInset)
+        .onHover { hovering = $0 }
+        .accessibilityLabel("\(origin)，\(count)")
+        .accessibilityValue(expanded ? "已展开" : "已折叠")
+
+        if expanded {
+            ForEach(entries) { entry in
+                let action = entry.alternativeSpelling ? "移除记录" : "重置"
+                Line(entry.kind.title, detail(entry)) {
+                    Pill(action) { reset(entry) }
+                        .accessibilityLabel("\(action)：\(entry.kind.title)（\(entry.origin)）")
+                }
+            }
+        }
+    }
+
+    private func detail(_ entry: CaptureChoices.Saved) -> String {
+        let status = entry.alternativeSpelling
+            ? "已保存“\(entry.choice.title)” · 可能与当前权限不同"
+            : entry.choice == .different ? "记录不一致，按拒绝处理" : entry.choice.title
+        if entry.kind == .notifications && !notificationsEnabled {
+            return status + " · 通知已关闭"
+        }
+        return status
     }
 }
 

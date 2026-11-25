@@ -27,6 +27,10 @@ enum OptIn {
         case whatsNew = "app-whats-new"
         case welcome = "app-welcome"
         case settings = "app-settings"
+        // The iPhone beta's quieter places, for now (IPhoneAsk.swift).
+        case about = "app-about"
+        case help = "app-help"
+        case newTab = "app-newtab"
     }
 
     /// Which list a press joins.
@@ -217,9 +221,13 @@ struct OptInForm: View {
     @State private var beta: Bool
     @State private var phase: Phase
     @State private var betaSent: Bool
+    /// "Did you mean …?", and the address it was shown for: the next press
+    /// with that address sends it as typed.
+    @State private var suggestion: String?
+    @State private var suggestedFor: String?
 
     /// `start` and `email`: where the form starts, for pictures.
-    init(source: OptIn.Source, betaOnly: Bool = false, button: String = "Join", offersBeta: Bool = true,
+    init(source: OptIn.Source, betaOnly: Bool = false, button: String = "加入", offersBeta: Bool = true,
          store: UserDefaults = Store.settings, compact: Bool = false,
          start: Phase = .idle, email: String = "", beta: Bool = true,
          joined: @escaping (Bool) -> Void = { _ in }) {
@@ -247,6 +255,9 @@ struct OptInForm: View {
                         .disabled(phase == .sending || email.trimmingCharacters(in: .whitespaces).isEmpty)
                         .opacity(email.trimmingCharacters(in: .whitespaces).isEmpty ? 0.55 : 1)
                 }
+                if let suggestion {
+                    hint(suggestion)
+                }
                 if offersBeta && !betaOnly {
                     Tick(on: $beta, title: "同时向我发送 iPhone Beta 版")
                 }
@@ -259,6 +270,29 @@ struct OptInForm: View {
             }
         }
         .animation(Motion.settle, value: phase)
+        .onChange(of: email) { _, now in
+            if now.trimmingCharacters(in: .whitespacesAndNewlines) != suggestedFor {
+                suggestion = nil
+                suggestedFor = nil
+            }
+        }
+    }
+
+    /// One quiet line under the field; the address in it fills the field.
+    private func hint(_ better: String) -> some View {
+        HStack(spacing: 0) {
+            Text("你想输入的是 ")
+            Button { email = better } label: {
+                Text(verbatim: better).underline().foregroundStyle(Palette.ink)
+            }
+            .buttonStyle(.plain)
+            Text("吗？")
+        }
+        .font(.system(size: 11.5))
+        .foregroundStyle(Palette.muted)
+        .lineLimit(1)
+        .truncationMode(.middle)
+        .transition(.opacity)
     }
 
     private var isFailed: Bool { if case .failed = phase { return true } else { return false } }
@@ -279,7 +313,7 @@ struct OptInForm: View {
         .font(.system(size: 12.5))
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(Palette.wash, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .background(Palette.wash, in: Capsule(style: .continuous))
         .frame(maxWidth: compact ? 260 : .infinity)
     }
 
@@ -305,6 +339,12 @@ struct OptInForm: View {
 
     private func send() {
         guard phase != .sending, phase != .done else { return }
+        if let better = EmailTypo.hold(email, shownFor: suggestedFor) {
+            suggestion = better
+            suggestedFor = email.trimmingCharacters(in: .whitespacesAndNewlines)
+            return
+        }
+        suggestion = nil
         let list: OptIn.List = betaOnly ? .iPhoneBeta : .news(iPhoneBeta: offersBeta && beta)
         phase = .sending
         let store = store
@@ -358,9 +398,9 @@ struct OptInFinePrint: View {
     var open: (URL) -> Void
     var body: some View {
         HStack(spacing: 4) {
-            Text("Unsubscribe anytime. Your email is used for nothing else.")
+            Text("你可以随时退订。邮箱不会用于其他用途。")
             Button { open(OptIn.privacy) } label: {
-                Text("Privacy").underline()
+                Text("隐私政策").underline()
             }
             .buttonStyle(.plain)
             .help(OptIn.privacy.absoluteString)
@@ -381,10 +421,10 @@ struct OptInBlock: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 3) {
-                Text("Get Search for iPhone early")
+                Text("抢先体验 iPhone 版 Search")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Palette.ink)
-                Text("Leave your email for the iPhone beta. After that, rare emails: only useful new features and big updates.")
+                Text("留下邮箱即可申请 iPhone 测试版。此后，仅在推出实用新功能或重大更新时发送邮件。")
                     .font(.system(size: 12))
                     .foregroundStyle(Palette.muted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -394,7 +434,7 @@ struct OptInBlock: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Palette.wash.opacity(0.55), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+        .background(Palette.wash.opacity(0.55), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 }
 
@@ -411,10 +451,10 @@ struct OptInWelcomePage: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Search for iPhone, early.")
+                Text("抢先体验 iPhone 版 Search")
                     .font(.system(size: 26, weight: .medium))
                     .foregroundStyle(Palette.ink)
-                Text("Leave your email and get the iPhone beta before everyone else. After that, rare emails: only useful new features and big updates.")
+                Text("留下邮箱，抢先体验 iPhone 测试版。此后，仅在推出实用新功能或重大更新时发送邮件。")
                     .font(.system(size: 14))
                     .foregroundStyle(Palette.muted)
                     .lineSpacing(2)
@@ -427,7 +467,7 @@ struct OptInWelcomePage: View {
                     OptInFinePrint(open: open)
                 }
             } else {
-                Text("You're offline. Settings › About has the same field for later.")
+                Text("当前处于离线状态。联网后，可在“设置 › 关于”中填写邮箱。")
                     .font(.system(size: 13))
                     .foregroundStyle(Palette.faint)
             }

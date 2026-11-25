@@ -201,6 +201,10 @@ enum SettingsIndex {
               more: "Off, ⌘S hides the column and the page takes the whole window.",
               keys: ["sidebar.foldIcons"], words: ["collapse", "collapsed", "compact", "narrow", "hide sidebar", "icons only", "favicons"],
               parent: "tabs.layout"),
+        .init(id: "fold.loadingLine", group: "window", icon: "slider.horizontal.below.rectangle",
+              title: "隐藏标签栏时显示加载进度线", detail: "按 ⌘S 收起标签栏后，在页面顶部用细线显示加载进度",
+              more: "标签栏可见时，标签页上的圆环会显示加载状态。收起标签栏后，页面顶部的细线会随加载进度延伸，加载完成后消失。",
+              keys: ["fold.loadingLine"], words: ["loading", "progress", "bar", "spinner", "indicator", "hidden sidebar", "folded", "arc"]),
         .init(id: "layout.cards", group: "window", icon: "rectangle.inset.filled",
               title: "以卡片形式显示网页", detail: "网页四周留出少量边距并采用圆角",
               more: "关闭时，网页延伸至窗口边缘，边栏呈白色并带有细分割线。",
@@ -245,6 +249,16 @@ enum SettingsIndex {
         .init(id: "sidebar.doorsUp", group: "tablook", icon: "rectangle.topthird.inset.filled",
               title: "顶部按钮", detail: "空间允许时，将书签、扩展和下载按钮置于前进、后退与刷新旁",
               keys: ["sidebar.doorsUp"], words: ["minimal", "toolbar", "footer", "bottom", "icons", "clean"], parent: "tabs.layout"),
+        .init(id: "helm.shown", group: "tablook", icon: "arrow.left.arrow.right",
+              title: "后退、前进和重新载入", detail: "取消勾选平时用快捷键操作的按钮，为标签页留出更多空间",
+              more: "无论显示哪些按钮，⌘[、⌘] 和 ⌘R 均可使用。标签栏在边栏时，按钮位于窗口控制按钮旁；标签栏在顶部时，按钮位于该行末端。",
+              keys: ["helm.back.hidden", "helm.forward.hidden", "helm.reload.hidden"],
+              words: ["toolbar", "buttons", "navigation", "hide", "back", "forward", "reload", "minimal", "clean"], kind: .wide),
+        .init(id: "foot.shown", group: "tablook", icon: "square.grid.3x1.below.line.grid.1x2",
+              title: "边栏底部的按钮", detail: "取消勾选即可隐藏扩展、书签或个人资料按钮",
+              more: "使用顶部标签栏时，这些按钮位于该行末端。固定的扩展会保留各自的按钮；你仍可从菜单打开“书签”，或前往“设置 › 扩展”。",
+              keys: ["foot.extensions.hidden", "foot.bookmarks.hidden", "foot.profile.hidden"],
+              words: ["toolbar", "buttons", "footer", "bottom", "hide", "extensions", "puzzle", "bookmarks", "profile", "customise", "customize", "minimal", "clean"], kind: .wide),
         .init(id: "sidebar.foldButton", group: "tablook", icon: "sidebar.left",
               title: "边栏按钮", detail: "位于窗口控制按钮旁，可像 ⌘S 一样隐藏边栏",
               more: "边栏隐藏时，按 ⌘S 或将指针移至窗口边缘可呼出，再点按按钮即可保持展开。",
@@ -267,12 +281,25 @@ enum SettingsIndex {
         .init(id: "tabs.reading", group: "tablook", icon: "text.line.first.and.arrowtriangle.forward",
               title: "显示阅读进度", detail: "向下滚动时，当前标签页背景会随进度填充灰色",
               keys: ["tabs.reading"], words: ["progress", "scroll"]),
+        .init(id: "tabs.pinCounts", group: "tablook", icon: "app.badge",
+              title: "显示固定标签页的未读数", detail: "从页面标题读取未读数，并以角标显示在固定标签页图标上",
+              keys: ["tabs.pinCounts"], words: ["badge", "unread", "count", "messages", "notifications", "pinned", "whatsapp"]),
         .init(id: "tabs.give", group: "tablook", icon: "hand.point.up.left",
               title: "按压标签页时的下沉反馈", detail: "点按时标签页轻微下沉，类似 Arc 的手感",
               keys: ["tabs.give"], words: ["press", "animation", "bounce"]),
         .init(id: "bookmarks.bar", group: "tablook", icon: "bookmark",
               title: "显示书签栏", detail: "在网页上方以横排显示你的书签",
               keys: ["bookmarks.bar"], words: ["favorites bar"]),
+        .init(id: "bookmarks.side", group: "tablook", icon: "list.bullet.rectangle",
+              title: "在边栏中显示书签栏", detail: "将每个空间的书签栏从页面上方移至边栏顶部",
+              more: "书签栏中的每个书签和文件夹各占一行，排列在固定行之前。点按文件夹时，会像在书签栏上一样打开菜单。",
+              keys: ["bookmarks.side"], words: ["favorites bar", "bookmarks toolbar", "sidebar", "column", "folders"],
+              parent: "bookmarks.bar"),
+        .init(id: "bookmarks.iconsOnly", group: "tablook", icon: "square.grid.2x2",
+              title: "书签栏仅显示图标", detail: "每个书签仅显示网站图标，悬停时显示名称",
+              more: "文件夹保留名称。已清空名称的书签会继续只显示图标。",
+              keys: ["bookmarks.iconsOnly"], words: ["favorites bar", "bookmarks toolbar", "favicons", "compact", "icon only", "names", "titles"],
+              parent: "bookmarks.bar"),
         .init(id: "motion.light", group: "motion", icon: "leaf",
               title: "在低电量模式下节能", detail: "节能或机身发热时简化动态效果；低电量模式下闲置标签页更快休眠",
               more: "在低电量模式或 Mac 发热时生效，网页内容本身不受影响。",
@@ -344,6 +371,10 @@ enum SettingsIndex {
               title: "在当前标签页上显示网址", detail: "以网站域名替代标题，指针悬停时恢复显示标题",
               more: "非拉丁字符的仿冒域名将显示其真实编码，普通 http 网页会标示“不安全”。关闭时，当前标签页对这两种情况仍会予以提示。",
               keys: ["tabs.address"], words: ["url", "domain", "security", "address bar"]),
+        .init(id: "tabs.clickAddressOnly", group: "tabbar", icon: "character.cursor.ibeam",
+              title: "点按当前标签页时只编辑网址", detail: "网址下方不再显示网站信息卡片",
+              more: "仍可从标签页菜单的“网站信息…”打开卡片。",
+              keys: ["tabs.clickAddressOnly"], words: ["site card", "site information", "card", "popover", "click", "url", "edit address", "address bar"]),
         .init(id: "tabs.mirror", group: "tabwindows", icon: "rectangle.on.rectangle",
               title: "在所有窗口中同步标签页", detail: "每个窗口在同一空间中显示相同的已打开标签页，如同共享固定标签页一样",
               more: "在任一窗口打开、关闭、移动、分组或重命名标签页，其他窗口都会同步更新。各窗口独立渲染网页，同一标签页可在两个窗口中同时查看。无痕标签页仅限于所在窗口，关闭某个窗口不会影响其他窗口中的标签页。",
@@ -419,9 +450,9 @@ enum SettingsIndex {
 
         // Spaces & Pins
         .init(id: "arc.setup", group: "arc", icon: "wand.and.stars",
-              title: "设为 Arc 风格", detail: "左侧标签栏、空间、固定行，以及保持原站点的固定标签页",
-              more: "同时会开启“在悬浮框中新建标签页”。撤销即可恢复原有设置。",
-              words: ["arc", "the browser company"]),
+              title: "设为 Arc 风格", detail: "使用左侧标签栏、空间、固定行和 Arc 的操作习惯，例如在 12 小时后关闭标签页",
+              more: "同时启用悬浮栏新建标签页、自动悬浮视频、轻扫返回以关闭由链接打开的标签页，以及按住 Shift 点按链接以速览。仅调整尚未启用的选项，撤销可恢复之前的设置。",
+              words: ["arc", "the browser company", "auto archive", "archive", "peek", "picture in picture", "swipe back"]),
         .init(id: "arc.import", group: "arc", icon: "square.and.arrow.down",
               title: "导入 Arc 的空间与固定标签页", detail: "从这台 Mac 上的 Arc 读取你的空间、固定标签页与文件夹",
               words: ["arc", "import"]),
@@ -487,6 +518,10 @@ enum SettingsIndex {
               title: "在悬浮栏中新建标签页", detail: "按 ⌘T 在页面上方呼出地址栏，与 Arc 一样",
               more: "按 Return 键在新标签页中打开输入的内容；按 Esc、⌘W 或点按外部即可关闭。",
               keys: ["newtab.floating"], words: ["command bar", "cmd t", "spotlight"]),
+        .init(id: "field.window", group: "opening", icon: "rectangle.center.inset.filled",
+              title: "在窗口中央显示悬浮地址栏", detail: "按 ⌘T 或 ⌘L 时，在窗口中间略靠上的位置显示悬浮地址栏",
+              more: "位置与 Arc 和 Zen 类似，靠近“聚焦”搜索框；页面和边栏会一起变暗。关闭后，地址栏将在边栏旁的页面区域内居中。",
+              keys: ["field.window"], words: ["command bar", "cmd t", "cmd l", "spotlight", "centre", "center", "position", "arc", "zen"]),
         .init(id: "newtab.recent", group: "opening", icon: "clock.arrow.circlepath",
               title: "新建标签页时显示最近访问", detail: "在输入前，⌘T 呼出的地址栏会列出最近访问的三个页面",
               more: "来自本机 Mac 的历史记录，排除已打开的页面（可用 ⌘K 查找）。在按下方向键前不会默认选中任何项，无痕标签页中不显示任何记录。",
@@ -512,6 +547,11 @@ enum SettingsIndex {
         .init(id: "passwords.fill", group: "passwords", icon: "rectangle.and.pencil.and.ellipsis",
               title: "自动填充登录信息", detail: "点按登录框即可在下方显示该网站的账户",
               keys: ["passwords.fill"], words: ["autofill", "login"]),
+        .init(id: "passwords.fill.prove", group: "passwords", icon: "touchid",
+              title: "填充前要求使用触控 ID", detail: "在网页上填充已存储的密码前，使用触控 ID 或 Mac 密码验证身份",
+              more: "验证通过后，一分钟内无需再次验证；Mac 睡眠或锁定后需要重新验证。Apple 密码和扩展使用各自的验证方式。",
+              keys: ["passwords.fill.prove"], words: ["touch id", "authenticate", "autofill", "lock", "biometric", "fingerprint", "password", "secure"],
+              parent: "passwords.fill"),
         .init(id: "passkeys", group: "passwords", icon: "person.badge.key",
               title: "提供通行密钥", detail: "在支持的网站上使用触控 ID 或 iCloud 通行密钥",
               keys: ["passkeys"], words: ["webauthn", "touch id"]),
@@ -573,6 +613,10 @@ enum SettingsIndex {
         .init(id: "autoscroll", group: "mouse", icon: "arrow.up.and.down.circle",
               title: "使用鼠标中键滚动", detail: "按下滚轮后移动鼠标进行滚动，与 Windows 一样",
               keys: ["autoscroll"], words: ["middle click", "autoscroll", "wheel"]),
+        .init(id: "wheel.smooth", group: "mouse", icon: "computermouse",
+              title: "使用鼠标滚轮时平滑滚动", detail: "滚轮每滚动一格，页面都会像 Chrome 一样平滑移动",
+              more: "触控板和本身支持平滑滚动的鼠标会保持原有行为。按住 ⌘、⌃ 或 ⌥ 时，页面会直接接收滚轮输入，以便缩放。",
+              keys: ["wheel.smooth"], words: ["smooth scrolling", "mouse wheel", "notch", "logitech", "jumpy", "choppy", "chrome"]),
         .init(id: "pages.bounce", group: "mouse", icon: "arrow.up.and.down",
               title: "顶部和底部回弹效果", detail: "滚动至页面尽头时略微拉伸并回弹，与 Safari 一样",
               keys: ["pages.bounce"], words: ["elastic", "rubber band", "overscroll", "bounce", "smooth scrolling", "safari"]),
@@ -650,6 +694,12 @@ enum SettingsIndex {
               keys: ["extensions.sites"],
               words: ["site access", "sites", "permissions", "host", "on click", "activetab", "memory", "extension"],
               kind: .note, findOnly: true),
+        .init(id: "extensions.safariApps", group: "extensions", icon: "safari",
+              title: "来自 Safari 扩展 App", detail: "默认关闭，可在“设置 › 扩展”底部开启",
+              more: "列出“应用程序”中各 App 随附的 Safari 扩展，供你作为未打包的扩展添加。仅运行 JavaScript，原生消息传递和内容拦截器无法使用。",
+              keys: [SafariApps.key],
+              words: ["safari", "safari extension", "app extension", "appex", "mac app"],
+              kind: .note, findOnly: true),
         .init(id: "note.awake", group: "memory", icon: "sun.max",
               title: "保持选定网站活跃", detail: "始终可用：在网站卡片中开启“保持此网站活跃”",
               keys: ["tabs.keepAwake"], words: ["awake", "sleep"], kind: .note, findOnly: true),
@@ -725,6 +775,9 @@ enum SettingsIndex {
         case "window.glass.clear", "window.glass.grain": return prefs.glass && !prefs.usesSpaces
         case "pins.folders": return prefs.sidebar && prefs.listsPins
         case "sidebar.foldIcons": return prefs.sidebar && !prefs.sideHides
+        case "bookmarks.side": return prefs.sidebar && prefs.bookmarksBar
+        case "bookmarks.iconsOnly": return prefs.bookmarksBar && !prefs.sideBookmarks
+        case "passwords.fill.prove": return prefs.fillsPasswords
         case "toolbar.left", "tabs.compact": return !prefs.sidebar
         case "profiles.oneWindow": return Profiles.shared.several
         case "spaces.links", "links.ask", "spaces.buttons": return prefs.usesSpaces
@@ -760,6 +813,7 @@ enum SettingsIndex {
         case "mail.default": return "仅在为邮件链接选择了网页邮箱时可用"
         case "links.peek.stays": return "仅在链接或固定标签页以速览打开时可用"
         case "launcher.key": return "仅在开启“在任意 App 中打开地址栏”时可用"
+        case "bookmarks.side": return "仅在显示书签栏且标签栏位于侧边时可用"
         default: return "仅在标签页位于侧边时可用"
         }
     }
@@ -868,40 +922,101 @@ extension Preferences {
     /// Set Up Like Arc: what it turns on, and what was there before, so
     /// Undo can put it back.
     struct ArcSetup {
-        var layout: TabsLayout
+        /// The three keys the tabs' layout is made of, so Undo puts back
+        /// the side and icons a top layout kept underneath.
+        var side: (shown: Bool, icons: Bool, position: SidebarPosition)
         var spaces: Bool
         var rows: Bool
         var keep: (home: Bool, peek: Bool)
         var floating: Bool
+        /// Arc's habits, added after 1.0.7: tabs that close themselves,
+        /// the video that floats out, swipe back closing a link's tab, and
+        /// peek. Kept key by key, so Undo puts back the exact choice.
+        var life: TabLife
+        var float: (leave: Bool, away: Bool)
+        var swipeCloses: Bool
+        var peek: (on: Bool, click: PeekClick)
     }
 
     var arcSnapshot: ArcSetup {
-        ArcSetup(layout: tabsLayout, spaces: usesSpaces, rows: listsPins, keep: (pinsGoHome, pinsPeek), floating: floatingNewTab)
+        ArcSetup(side: (sidebar, sideIcons, sidePosition), spaces: usesSpaces, rows: listsPins, keep: (pinsGoHome, pinsPeek), floating: floatingNewTab,
+                 life: tabLife, float: (floatsOnLeave, floatsAway), swipeCloses: swipeBackCloses, peek: (peeksLinks, peekClick))
     }
 
+    /// Any duration, float or click someone chose counts: Set Up only
+    /// turns on what is off, with Arc's own (12 hours, on leaving a tab,
+    /// Shift-click), and leaves a choice already made alone.
     var looksLikeArc: Bool {
         tabsLayout == .left && usesSpaces && listsPins && pinsGoHome && pinsPeek && floatingNewTab
+            && tabLife != .never && floatOwn != .never && swipeBackCloses && peeksLinks
     }
 
     /// Turns Arc's way on and says what changed.
     @discardableResult
     func setUpLikeArc() -> [String] {
         var changed: [String] = []
-        if tabsLayout != .left { tabsLayout = .left; changed.append("tabs on the left") }
-        if !usesSpaces { usesSpaces = true; changed.append("Spaces") }
-        if !listsPins { listsPins = true; changed.append("pinned rows") }
-        if !(pinsGoHome && pinsPeek) { pinsKeepSite = true; changed.append("pins keep their site") }
-        if !floatingNewTab { floatingNewTab = true; changed.append("the floating new tab") }
+        if tabsLayout != .left { tabsLayout = .left; changed.append("左侧标签栏") }
+        if !usesSpaces { usesSpaces = true; changed.append("空间") }
+        if !listsPins { listsPins = true; changed.append("固定行") }
+        if !(pinsGoHome && pinsPeek) { pinsKeepSite = true; changed.append("固定标签页保留原网站") }
+        if !floatingNewTab { floatingNewTab = true; changed.append("悬浮栏新建标签页") }
+        if tabLife == .never { tabLife = .halfDay; changed.append("12 小时后关闭标签页") }
+        if floatOwn == .never { floatOwn = .tabs; changed.append("自动悬浮视频") }
+        if !swipeBackCloses { swipeBackCloses = true; changed.append("轻扫返回以关闭由链接打开的标签页") }
+        if !peeksLinks { peekChoice = .shift; changed.append("按住 Shift 点按链接以速览") }
         return changed
     }
 
+    /// Only what differs is written back, so a key Set Up never touched
+    /// stays as unwritten as it was.
     func restore(_ before: ArcSetup) {
-        tabsLayout = before.layout
-        usesSpaces = before.spaces
-        listsPins = before.rows
-        pinsGoHome = before.keep.home
-        pinsPeek = before.keep.peek
-        floatingNewTab = before.floating
+        if sidePosition != before.side.position { sidePosition = before.side.position }
+        if sideIcons != before.side.icons { sideIcons = before.side.icons }
+        if sidebar != before.side.shown { sidebar = before.side.shown }
+        if usesSpaces != before.spaces { usesSpaces = before.spaces }
+        if listsPins != before.rows { listsPins = before.rows }
+        if pinsGoHome != before.keep.home { pinsGoHome = before.keep.home }
+        if pinsPeek != before.keep.peek { pinsPeek = before.keep.peek }
+        if floatingNewTab != before.floating { floatingNewTab = before.floating }
+        if tabLife != before.life { tabLife = before.life }
+        if floatsOnLeave != before.float.leave { floatsOnLeave = before.float.leave }
+        if floatsAway != before.float.away { floatsAway = before.float.away }
+        if swipeBackCloses != before.swipeCloses { swipeBackCloses = before.swipeCloses }
+        if peekClick != before.peek.click { peekClick = before.peek.click }
+        if peeksLinks != before.peek.on { peeksLinks = before.peek.on }
+    }
+
+}
+
+/// Set Up Like Arc, wherever it is offered (Settings, the welcome, after
+/// Arc's spaces are brought over): what was there before it, for one Undo
+/// shared by all three.
+@MainActor
+final class LikeArc: ObservableObject {
+    static let shared = LikeArc()
+    @Published private(set) var before: Preferences.ArcSetup?
+
+    /// Sets it up, keeps what was there, and says what changed.
+    @discardableResult
+    func setUp(_ prefs: Preferences) -> [String] {
+        let was = prefs.arcSnapshot
+        let changed = prefs.setUpLikeArc()
+        if !changed.isEmpty { before = was }
+        return changed
+    }
+
+    func undo(_ prefs: Preferences) {
+        guard let before else { return }
+        prefs.restore(before)
+        self.before = nil
+    }
+
+    /// Undo is there while it is still set up like Arc: changed by hand
+    /// since, there is nothing to undo.
+    func undoable(_ prefs: Preferences) -> Bool { before != nil && prefs.looksLikeArc }
+
+    static func said(_ changed: [String]) -> String {
+        changed.isEmpty ? "已设为 Arc 风格" : "已开启：" + changed.joined(separator: "、")
     }
 }
 
@@ -970,7 +1085,9 @@ extension SettingsIndex {
             guard let choice = (value as? String).flatMap(PeekChoice.init) else { return false }
             prefs.peekChoice = choice
         case "arc.setup":
-            prefs.setUpLikeArc()
+            LikeArc.shared.setUp(prefs)
+        case "arc.undo":
+            LikeArc.shared.undo(prefs)
         default:
             return false
         }
